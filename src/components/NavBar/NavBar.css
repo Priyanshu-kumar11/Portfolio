@@ -1,0 +1,26 @@
+.navbar-nav .nav-link {
+  margin-right: 15px; /* Space between menu items */
+}
+
+.navbar-nav .nav-link:hover {
+  color: #f0f0f0; /* Change color on hover */
+}
+
+.navbar {
+  height: 60px; /* Adjust height as needed */
+}
+
+/* Ensure that the navbar items have sufficient space */
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    position: absolute; /* Make sure it positions properly */
+    top: 60px; /* Adjust based on navbar height */
+    right: 0; /* Align to the right */
+    left: auto; /* Remove left alignment */
+    width: 250px; /* Set a fixed width for the dropdown */
+    z-index: 1000; /* Ensure it overlaps other content */
+  }
+  .navbar-collapse.show {
+    display: block; /* Ensure it shows when toggled */
+  }
+}

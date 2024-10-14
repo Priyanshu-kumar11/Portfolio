@@ -1,0 +1,61 @@
+.projects {
+  padding: 20px; /* Add padding for spacing */
+  background-color: hsl(220, 13%, 18%); /* Dark background color for contrast */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  color: white;
+}
+
+h2 {
+  font-size: 2.5rem; /* Size of the heading */
+  margin-bottom: 20px; /* Space below the heading */
+  text-align: center; /* Center the heading */
+}
+
+.project-list {
+  display: flex; /* Use flexbox for vertical alignment */
+  flex-direction: column; /* Stack items in a column */
+  gap: 20px; /* Space between project cards */
+}
+
+.project-card {
+  display: flex; /* Use flexbox for horizontal layout */
+  align-items: center; /* Center align items vertically */
+  background-color: #282c34; /* Dark background for project cards */
+  padding: 15px; /* Inner padding */
+  transition: transform 0.2s; /* Smooth transform transition */
+  margin-left: 400px;
+}
+
+.project-card:hover {
+  transform: scale(1.02); /* Slight scale effect on hover */
+}
+
+/* Adjusted image size */
+.project-image {
+  width: 70%; /* Set width to a percentage of the card */
+  height: auto; /* Maintain the aspect ratio */
+  max-width: 150px; /* Optional: max width to keep images small */
+  border-radius: 5px; /* Rounded corners for the image */
+  margin-right: 30px; /* Increased space between image and text */
+  margin-left: 50px;
+}
+
+h3 {
+  font-size: 1.5rem; /* Size of the project title */
+  margin-bottom: 10px; /* Space below the title */
+}
+
+.project-link {
+  display: inline-block; /* Display as a block for better styling */
+  margin-top: 10px; /* Space above the link */
+  padding: 10px 15px; /* Padding for the link */
+  background-color: #007bff; /* Blue background color */
+  color: white; /* White text color */
+  text-decoration: none; /* No underline */
+  border-radius: 5px; /* Rounded corners */
+  transition: background-color 0.3s; /* Smooth background transition */
+}
+
+.project-link:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}

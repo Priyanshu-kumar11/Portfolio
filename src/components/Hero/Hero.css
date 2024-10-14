@@ -1,0 +1,76 @@
+/* Hero.css */
+.hero {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  height: 100vh; /* Full viewport height */
+  background-color: #282c34; /* Dark background */
+  color: white; /* Default text color */
+  padding: 40px 20px; /* Top padding for space */
+  background-size: cover;
+  background-position: center;
+}
+
+.hero-content {
+  max-width: 600px;
+}
+
+h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  letter-spacing: 2px;
+}
+
+.highlight-name {
+  color: #FFA500; /* Reddish yellow color */
+}
+
+p {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.cta-btn {
+  display: inline-block;
+  padding: 12px 24px;
+  margin-right: 15px;
+  border: 2px solid white;
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  border-radius: 5px;
+}
+
+.cta-btn:hover {
+  background-color: white;
+  color: #282c34;
+}
+
+.secondary {
+  border-color: #f0f0f0;
+  color: #f0f0f0;
+}
+
+.secondary:hover {
+  background-color: #f0f0f0;
+  color: #282c34;
+}
+
+.social-links {
+  margin-top: 20px;
+}
+
+.social-links a {
+  color: white;
+  margin: 0 10px;
+  text-decoration: none;
+  font-size: 1.5rem;
+  transition: color 0.3s ease;
+}
+
+.social-links a:hover {
+  color: #007bff; /* Change to your preferred hover color */
+}

@@ -1,0 +1,28 @@
+.about {
+  padding: 40px 20px; /* Top and bottom padding for spacing */
+  text-align: center; /* Center-align text for consistency */
+  background-color: #282c34; /* Dark background */
+  color: white; /* Dark text color for readability */
+  /* max-width: 1200px; */
+  margin: 0 auto; /* Center the section */
+}
+
+.about h2 {
+  font-size: 2.5rem; /* Heading size */
+  margin-bottom: 20px; /* Space below heading */
+}
+
+.about p {
+  font-size: 1.2rem; /* Paragraph font size */
+  margin-bottom: 20px; /* Space below paragraph */
+}
+
+.about ul {
+  list-style-type: none; /* Remove default list style */
+  padding: 0; /* Remove padding */
+}
+
+.about li {
+  font-size: 1rem; /* List item font size */
+  margin: 10px 0; /* Space between list items */
+}

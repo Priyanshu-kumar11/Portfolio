@@ -1,0 +1,25 @@
+.footer {
+  background-color: hsl(220, 13%, 18%); /* Dark background color */
+  color: white; /* White text color */
+  padding: 20px; /* Padding for spacing */
+  text-align: center; /* Center the text */
+  border-top: 2px solid #007bff; /* Horizontal line with a blue color */
+}
+
+.footer h2 {
+  font-size: 2rem; /* Size of the title */
+  margin-bottom: 10px; /* Space below the title */
+}
+
+.footer p {
+  margin: 5px 0; /* Space between paragraphs */
+}
+
+.footer-link {
+  color: #007bff; /* Link color */
+  text-decoration: none; /* Remove underline */
+}
+
+.footer-link:hover {
+  text-decoration: underline; /* Underline on hover */
+}
