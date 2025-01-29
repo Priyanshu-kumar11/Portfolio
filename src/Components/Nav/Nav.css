@@ -1,0 +1,61 @@
+/* Nav.css */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color:  #5A5A5A; /* Sienna */
+  position: fixed; /* Fix it at the top */
+  top: 0; /* No gap from the top */
+  left: 0;
+  right: 0;
+  z-index: 1000; /* Ensures it's above other content */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Add shadow for better separation */
+}
+
+/* Style for links */
+.nav a {
+  text-decoration: none; /* Remove underline */
+  color: #ffffff; /* White text */
+  font-size: 1rem;
+  margin: 0 1rem;
+  transition: color 0.3s ease; /* Smooth hover effect */
+}
+
+.nav a:hover {
+  color: #FFD700; /* Golden yellow for hover effect */
+}
+
+.nav a.active {
+  font-weight: bold;
+  color: #FFD700; /* Highlight active link */
+}
+
+/* Ensure content doesn't overlap with fixed nav */
+body {
+  padding-top: 80px; /* Adjust this based on nav height */
+  margin: 0; /* Remove any global margin */
+}
+
+/* Style for the unordered list in the Nav */
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+/* Style for list items in the Nav */
+ul li {
+  display: inline-block;
+}
+
+/* Clear any other potential unwanted content */
+* {
+  box-sizing: border-box; /* Ensure padding and margin don't affect layout unexpectedly */
+}
+
+/* Optionally add some padding to the content section */
+.content {
+  padding-top: 80px; /* To offset the height of the nav bar */
+}

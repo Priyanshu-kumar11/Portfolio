@@ -1,0 +1,74 @@
+.skills-container {
+  width: 80%;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #5A5A5A; /* Dark Gray */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 50px;
+}
+
+/* Skills Title */
+.skills-title {
+  font-size: 2rem;
+  color: #F4E3D7; /* Soft Creamy White for Elegance */
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Skills Category */
+.skills-category {
+  margin-bottom: 20px;
+}
+
+.skills-category h3 {
+  font-size: 1.5rem;
+  color: #FFC107; /* Warm Golden Yellow for Contrast */
+  margin-bottom: 10px;
+}
+
+/* Skills List */
+.skills-category ul {
+  list-style-type: none;
+  padding-left: 0;
+  display: flex;
+  justify-content: center;
+  padding: 2px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.skills-category ul li {
+  font-size: 1.1rem;
+  color: #E0E0E0; /* Light Gray for Readability */
+  margin-bottom: 5px;
+  padding: 5px 10px;
+  background-color: rgba(255, 255, 255, 0.1); /* Subtle Highlight */
+  border-radius: 5px;
+}
+
+/* Bullet Points */
+.skills-category ul li::before {
+  content: "• ";
+  color: #FFC107; /* Golden Bullet */
+  font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+  .skills-container {
+    width: 90%;
+    padding: 15px;
+  }
+
+  .skills-title {
+    font-size: 1.5rem;
+  }
+
+  .skills-category h3 {
+    font-size: 1.2rem;
+  }
+
+  .skills-category ul li {
+    font-size: 1rem;
+  }
+}
