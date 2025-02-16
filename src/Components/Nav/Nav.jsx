@@ -6,26 +6,26 @@ const Nav = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="navbar ">
+    <nav className="navbar">
       {/* Toggle Button */}
       <button className="toggle-btn gradient-text" onClick={() => setIsOpen(!isOpen)}>
         {isOpen ? "✖ Close" : "☰ Menu"}
       </button>
 
-      {/* Navigation Links (Hidden/Visible based on state) */}
-      <ul className={`nav-links gradient-text ${isOpen ? "open" : ""}`}>
+      {/* Navigation Links */}
+      <ul className={`nav-links ${isOpen ? "open" : ""}`}>
         <li>
-          <NavLink to="/" exact activeClassName="active">
+          <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>
             Home
           </NavLink>
         </li>
         <li>
-          <NavLink to="/about" activeClassName="active">
+          <NavLink to="/about" className={({ isActive }) => (isActive ? "active" : "")}>
             About
           </NavLink>
         </li>
         <li>
-          <NavLink to="/projects" activeClassName="active">
+          <NavLink to="/projects" className={({ isActive }) => (isActive ? "active" : "")}>
             Projects
           </NavLink>
         </li>
