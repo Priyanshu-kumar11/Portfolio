@@ -1,27 +1,32 @@
 /* Navbar Styles */
 .navbar {
-  position: fixed;
+  position: fixed; /* Fixed to stay at the top */
   top: 0;
   right: 0;
+  width: 100%;
   padding: 1rem;
   z-index: 1000;
+ 
 }
 
 /* Toggle Button */
 .toggle-btn {
-  background: none;
+  background: transparent;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
   color: white;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
 }
 
 /* Navigation Links */
 .nav-links {
   position: absolute;
   top: 3rem;
-  right: 0;
-  background: rgba(0, 0, 0, 0.8);
+  right: 1rem;
+  background: transparent;
   padding: 1rem;
   display: none;
   border-radius: 8px;
