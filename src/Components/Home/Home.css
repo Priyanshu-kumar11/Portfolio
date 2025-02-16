@@ -9,7 +9,7 @@
 
 body {
   font-family: 'Montserrat', sans-serif; /* Use Montserrat for body text */
-  background: #D3D3D3;  /* Light gray background */
+  background:#2E1A59;  /* Light gray background */
   color: #222222;       /* Dark text color */
   display: flex;
   justify-content: center;  /* Center content horizontally */
@@ -18,7 +18,8 @@ body {
   text-align: center;       /* Center align text */
   position: relative;       /* Needed for positioning elements */
   flex-direction: column;   /* Stack elements vertically */
-  padding-top: 30px;        /* Adjust padding to bring elements closer to the top */
+  padding-top: 30px;  
+  border-radius: 1px sloid rgba(243, 235, 235, 0.861);      /* Adjust padding to bring elements closer to the top */
 }
 
 .title {
@@ -97,4 +98,10 @@ body {
   font-size: 1.1rem;
   margin-top: 20px;
   line-height: 1.6;
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #ff6600, #ff00ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

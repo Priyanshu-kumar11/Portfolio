@@ -5,9 +5,9 @@ import Nav from "../Nav/Nav";
 const Footer = () => {
   return (
     <footer className="footer">
-      <div className="footer-content">
+      <div className="footer-content ">
         <p>
-          Design and Develop by <span>Priyanshu Kumar</span>
+          Design and Develop by <span className="gradient-text">Priyanshu Kumar</span>
         </p>
         <div className="footer-links">
           <p>Connect with me:</p>

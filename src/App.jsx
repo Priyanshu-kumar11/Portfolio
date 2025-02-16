@@ -11,7 +11,7 @@ const router = createBrowserRouter([
     path: '/',
     element: (
       <>
-        <Nav />
+      
         <Home />
         <Footer/>
       </>
@@ -21,7 +21,7 @@ const router = createBrowserRouter([
     path: '/about',
     element: (
       <>
-        <Nav />
+      
         <About />
         <Footer/>
       </>
@@ -31,7 +31,7 @@ const router = createBrowserRouter([
     path: '/projects',
     element: (
       <>
-        <Nav />
+        
         <Projects />
         <Footer/>
       </>

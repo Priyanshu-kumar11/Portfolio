@@ -1,7 +1,7 @@
 /* General styling for the Projects section */
 .projects-container {
   padding: 3rem 1.5rem;
-  background-color:#5A5A5A;
+  background-color: transparent;
   text-align: center;
   font-family: 'Montserrat', sans-serif;
 }
@@ -9,7 +9,6 @@
 .projects-title {
   font-size: 2.5rem;
   font-weight: 700;
-  color: hsl(210, 7%, 6%);
   margin-bottom: 2rem;
   font-family: 'Playfair Display', serif;
 }
@@ -17,180 +16,148 @@
 /* Styling for the grid of project cards */
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Responsive columns */
+  grid-template-columns: repeat(2, 1fr); 
   gap: 2rem;
   padding: 1rem;
-  justify-items: center; /* Center the cards horizontally */
+  justify-items: center;
 }
 
 /* Individual project card styling */
 .project-card {
-  background-color: #ffffff;
-  padding: 2rem;
+  background-color: transparent;
   border-radius: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease;
-  font-family: 'Montserrat', sans-serif;
+  width: 300px;
+  border: 1px solid white;
+  height: 350px;
+  perspective: 1000px; /* Enables 3D effect */
+  cursor: pointer;
+  position: relative;
+}
+
+/* Card flipping effect */
+.project-card .front,
+.project-card .back {
+  position: absolute;
   width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  transition: transform 0.6s;
+  border-radius: 1rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  height: auto; /* Make the height flexible based on content */
-  transform-style: preserve-3d;
-  transition: transform 0.6s;
-  cursor: pointer;
-}
-
-.project-card.flipped {
-  transform: rotateY(180deg); /* Flip the card */
-}
-
-/* Front side of the project card */
-.front {
-  display: block;
-  backface-visibility: hidden;
-}
-
-/* Back side of the project card */
-.back {
-  display: block;
-  backface-visibility: hidden;
-  transform: rotateY(180deg); /* Ensure the back side appears after the flip */
-  display: flex; 
   align-items: center;
-  justify-content: center; /* Center the content inside the back side */
-  padding: 0.5rem; /* Reduce padding to bring image closer to the top */
-  height: auto; /* Make the back container flexible */
-  max-width: 100%; /* Ensure the back doesn't overflow */
-  overflow: hidden; /* Prevent image from overflowing */
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
-/* Hover effect for the project card */
-.project-card:hover {
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+.project-card.flipped .front {
+  transform: rotateY(180deg);
+}
+
+.project-card.flipped .back {
+  transform: rotateY(0);
+}
+
+.front {
+  transform: rotateY(0);
+  background-color: transparent;
+}
+
+.back {
+  transform: rotateY(-180deg);
+  background-color: #2b2d42;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure image fits properly */
+.back img {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 0.5rem;
 }
 
 /* Project title styling */
 .project-name {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: #2b2d42;
   margin-bottom: 1rem;
   font-family: 'Playfair Display', serif;
+  text-align: center;
 }
 
 /* Project tech stack styling */
 .project-tech {
   font-size: 0.9rem;
   color: #4a5568;
-  margin-bottom: 1.5rem;
-  font-style: italic;
+  margin-bottom: 1rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  justify-content: center;
 }
 
 /* Styling for tech items */
 .tech-item {
   display: flex;
   align-items: center;
-  font-size: 1rem;
-  color: #38a169; /* Use a vibrant green color */
-}
-
-.tech-icon {
-  margin-right: 0.5rem;
-  color: #3182ce; /* Blue color for tech icons */
+  font-size: 0.9rem;
+  color: #38a169;
+  padding: 0.3rem 0.5rem;
+  background: #edf2f7;
+  border-radius: 5px;
 }
 
 /* Styling for the project description list */
 .project-description {
   list-style-type: none;
   padding-left: 0;
-  color: #718096;
-  flex-grow: 1;
-  overflow: auto; /* Allow scrolling if content overflows */
+  color: white;
+  font-size: 0.9rem;
+  text-align: left;
+  max-height: 120px;
+  overflow: auto; /* Hide scrollbar */
+  text-overflow: ellipsis; /* Ensure content does not overflow */
 }
 
 .project-description li {
-  margin-bottom: 1rem;
-  font-size: 1rem;
+  margin-bottom: 0.5rem;
   position: relative;
   padding-left: 1.5rem;
 }
 
-/* Use creative checkmarks with colors */
 .project-description li:before {
-  content: '✔'; /* Change checkmark to a solid one */
+  content: '✔';
   position: absolute;
   left: 0;
-  color: #e53e3e; /* Red checkmark for more emphasis */
+  color: #e53e3e;
   font-size: 1.3rem;
   top: 0.2rem;
 }
 
-/* Styling for the project image on the back */
-.back img {
-  width: 100%; /* Ensure the image takes up the full width */
-  height: auto; /* Let the image maintain its aspect ratio */
-  max-height: 100%; /* Restrict the image height within the container */
-  object-fit: contain; /* Ensures the image fits inside the container without stretching */
-  display: block; /* Ensures the image is treated as a block element */
-  margin: 0 auto; /* Centers the image horizontally */
-  padding-top: 0; /* Remove any padding above the image */
-}
-
 /* Responsive adjustments */
-@media (max-width: 1024px) {
-  .projects-title {
-    font-size: 2.3rem;
-  }
-
-  .project-name {
-    font-size: 1.7rem;
-  }
-
-  .project-tech {
-    font-size: 0.85rem;
-  }
-
-  .project-description li {
-    font-size: 0.95rem;
-  }
-}
-
 @media (max-width: 768px) {
   .projects-title {
     font-size: 2rem;
   }
-
   .project-name {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
   }
-
-  .project-tech {
-    font-size: 0.8rem;
-  }
-
-  .project-description li {
-    font-size: 0.9rem;
+  .projects-grid {
+    grid-template-columns: 1fr; /* Switch to single column on small screens */
   }
 }
 
-@media (max-width: 480px) {
-  .projects-title {
-    font-size: 1.8rem;
-  }
-
-  .project-name {
-    font-size: 1.3rem;
-  }
-
-  .project-tech {
-    font-size: 0.75rem;
-  }
-
-  .project-description li {
-    font-size: 0.85rem;
-  }
+/* Gradient Text Effect */
+.gradient-text {
+  background: linear-gradient(to right, #ff6600, #ff00ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

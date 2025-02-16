@@ -4,7 +4,7 @@ import './TechnicalSkills.css';
 const TechnicalSkills = () => {
   return (
     <div className="skills-container">
-      <h2 className="skills-title">Technical Skills</h2>
+      <h2 className="skills-title gradient-text ">Technical Skills</h2>
       
       <div className="skills-category">
         <h3>Programming Languages</h3>
