@@ -157,7 +157,9 @@
 
 /* Gradient Text Effect */
 .gradient-text {
-  background: linear-gradient(to right, #ff6600, #ff00ff);
+  background: linear-gradient(to right, #ff6600, #f06c00);
   -webkit-background-clip: text;
+  background-clip: text; /* Standard property for modern browsers */
   -webkit-text-fill-color: transparent;
+  text-fill-color: transparent; /* Standard property for modern browsers */
 }
