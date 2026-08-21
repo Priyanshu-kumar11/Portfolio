@@ -17,6 +17,7 @@ export interface Project {
   demoType: 'crypto-sheets' | 'hr-powerbi' | 'none';
   githubUrl?: string;
   liveUrl?: string;
+  appsScriptUrl?: string;
 }
 
 export interface ExperienceItem {

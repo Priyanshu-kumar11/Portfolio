@@ -87,13 +87,13 @@ export const Navbar: React.FC<Props> = ({
           </div>
         </a>
 
-        {/* Role Switcher Pill */}
-        <div className={`hidden lg:flex items-center rounded-lg p-1 text-xs transition ${
-          isDark ? 'bg-slate-900/90 border border-slate-800' : 'bg-slate-100 border border-slate-200'
+        {/* Role Switcher Pill - visible on wide desktop screens with sleek spacing */}
+        <div className={`hidden xl:flex items-center rounded-xl p-1 text-xs transition border ${
+          isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-slate-100 border-slate-300'
         }`}>
           <button
             onClick={() => setRoleFilter('all')}
-            className={`px-3 py-1 rounded-md transition font-medium flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg transition font-medium flex items-center gap-1.5 cursor-pointer ${
               roleFilter === 'all'
                 ? isDark
                   ? 'bg-blue-600 text-white font-semibold shadow-sm'
@@ -102,11 +102,11 @@ export const Navbar: React.FC<Props> = ({
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            Dual Profile
+            <span>Dual Profile</span>
           </button>
           <button
             onClick={() => setRoleFilter('data-analyst')}
-            className={`px-3 py-1 rounded-md transition font-medium flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg transition font-medium flex items-center gap-1.5 cursor-pointer ${
               roleFilter === 'data-analyst'
                 ? isDark
                   ? 'bg-blue-600 text-white font-semibold shadow-sm'
@@ -115,11 +115,11 @@ export const Navbar: React.FC<Props> = ({
             }`}
           >
             <BarChart2 className="w-3.5 h-3.5" />
-            Data Analyst
+            <span>Data Analyst</span>
           </button>
           <button
             onClick={() => setRoleFilter('business-analyst')}
-            className={`px-3 py-1 rounded-md transition font-medium flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg transition font-medium flex items-center gap-1.5 cursor-pointer ${
               roleFilter === 'business-analyst'
                 ? isDark
                   ? 'bg-blue-600 text-white font-semibold shadow-sm'
@@ -128,12 +128,12 @@ export const Navbar: React.FC<Props> = ({
             }`}
           >
             <Briefcase className="w-3.5 h-3.5" />
-            Business Analyst
+            <span>Business Analyst</span>
           </button>
         </div>
 
-        {/* Desktop Navigation Links */}
-        <nav className={`hidden md:flex items-center gap-5 text-xs font-medium ${
+        {/* Desktop Navigation Links - Perfectly spaced */}
+        <nav className={`hidden md:flex items-center gap-4 lg:gap-5 xl:gap-6 text-xs lg:text-sm font-medium ${
           isDark ? 'text-slate-300' : 'text-slate-700'
         }`}>
           {navLinks.map((link) => (
@@ -141,23 +141,25 @@ export const Navbar: React.FC<Props> = ({
               key={link.href}
               href={link.href}
               onClick={(e) => handleNavClick(e, link.href)}
-              className={`transition cursor-pointer ${isDark ? 'hover:text-sky-400' : 'hover:text-blue-600'}`}
+              className={`transition-colors py-1 hover:text-blue-600 cursor-pointer ${
+                isDark ? 'hover:text-sky-400' : 'hover:text-blue-600'
+              }`}
             >
               {link.label}
             </a>
           ))}
         </nav>
 
-        {/* Quick Actions & Day/Night Toggle */}
-        <div className="hidden sm:flex items-center gap-2">
+        {/* Quick Actions & Day/Night Toggle (No duplicate Contact button) */}
+        <div className="hidden sm:flex items-center gap-2.5">
           {/* Day / Night Theme Toggle */}
           <button
             id="theme-toggle-btn"
             onClick={toggleTheme}
-            className={`px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 ${
+            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 border ${
               isDark
-                ? 'bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 hover:border-amber-300/40'
-                : 'bg-white hover:bg-slate-100 text-slate-900 border border-slate-300 hover:border-slate-400'
+                ? 'bg-slate-900 hover:bg-slate-800 text-amber-300 border-slate-700 hover:border-amber-300/40'
+                : 'bg-white hover:bg-slate-100 text-slate-900 border-slate-300 hover:border-slate-400'
             }`}
             title={isDark ? 'Switch to Day (Light) Mode' : 'Switch to Night (Dark) Mode'}
             aria-label="Toggle day and night mode"
@@ -175,22 +177,10 @@ export const Navbar: React.FC<Props> = ({
             )}
           </button>
 
-          <a
-            href="#contact"
-            onClick={(e) => handleNavClick(e, '#contact')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-              isDark
-                ? 'bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700'
-                : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 shadow-xs'
-            }`}
-          >
-            Contact
-          </a>
-
           <button
             id="nav-resume-btn"
             onClick={onOpenResume}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-sm active:scale-95 transition cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs lg:text-sm shadow-sm active:scale-95 transition cursor-pointer"
           >
             <FileText className="w-3.5 h-3.5" />
             <span>Resume</span>

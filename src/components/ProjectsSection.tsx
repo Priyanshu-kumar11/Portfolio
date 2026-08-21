@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   BarChart3, 
   Code, 
@@ -34,6 +35,28 @@ export const ProjectsSection: React.FC<Props> = ({ roleFilter }) => {
     if (selectedCategory === 'all') return true;
     return project.category === selectedCategory;
   });
+
+  // Lock body scroll and handle Escape key when simulator or snippet modal is open
+  useEffect(() => {
+    const isModalOpen = Boolean(activeDemoProject || activeCodeSnippet);
+    if (isModalOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setActiveDemoProject(null);
+          setActiveCodeSnippet(null);
+        }
+      };
+      
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [activeDemoProject, activeCodeSnippet]);
 
   return (
     <section id="projects" className={`py-16 sm:py-20 transition-colors duration-300 ${
@@ -229,7 +252,22 @@ export const ProjectsSection: React.FC<Props> = ({ roleFilter }) => {
                   isDark ? 'border-slate-800' : 'border-slate-200'
                 }`}>
                   <div className="flex flex-wrap items-center gap-2">
-                    {project.liveUrl && project.liveUrl !== '#' && (
+                    {project.appsScriptUrl ? (
+                      <a
+                        href={project.appsScriptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`text-xs font-semibold flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border transition ${
+                          isDark 
+                            ? 'text-sky-400 bg-sky-950/50 border-sky-800 hover:bg-sky-900/50' 
+                            : 'text-blue-800 bg-blue-50 border-blue-300 hover:bg-blue-100 shadow-xs'
+                        }`}
+                        title="Open deployed Google Apps Script Web App"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Apps Script Web App</span>
+                      </a>
+                    ) : project.liveUrl && project.liveUrl !== '#' ? (
                       <a
                         href={project.liveUrl}
                         target="_blank"
@@ -237,13 +275,14 @@ export const ProjectsSection: React.FC<Props> = ({ roleFilter }) => {
                         className={`text-xs font-semibold flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border transition ${
                           isDark 
                             ? 'text-emerald-400 bg-emerald-950/40 border-emerald-800 hover:bg-emerald-900/40' 
-                            : 'text-emerald-800 bg-emerald-50 border-emerald-300 hover:bg-emerald-100'
+                            : 'text-emerald-800 bg-emerald-50 border-emerald-300 hover:bg-emerald-100 shadow-xs'
                         }`}
+                        title="Open Live App"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Live Sheet</span>
+                        <span>Live Demo</span>
                       </a>
-                    )}
+                    ) : null}
                     {project.codeSnippet && (
                       <button
                         onClick={() => setActiveCodeSnippet(project)}
@@ -291,12 +330,18 @@ export const ProjectsSection: React.FC<Props> = ({ roleFilter }) => {
           ))}
         </div>
 
-        {/* Code Snippet Modal */}
-        {activeCodeSnippet && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-            <div className={`relative w-full max-w-3xl rounded-xl border shadow-2xl overflow-hidden my-auto max-h-[85vh] flex flex-col ${
-              isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-300'
-            }`}>
+        {/* Code Snippet Modal rendered cleanly via Portal */}
+        {activeCodeSnippet && createPortal(
+          <div 
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto"
+            onClick={() => setActiveCodeSnippet(null)}
+          >
+            <div 
+              className={`relative w-full max-w-3xl rounded-xl border shadow-2xl overflow-hidden my-auto max-h-[85vh] flex flex-col ${
+                isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-300'
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className={`px-5 py-3.5 border-b flex items-center justify-between ${
                 isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
               }`}>
@@ -308,11 +353,12 @@ export const ProjectsSection: React.FC<Props> = ({ roleFilter }) => {
                 </div>
                 <button
                   onClick={() => setActiveCodeSnippet(null)}
-                  className={`p-1 rounded-md transition ${
-                    isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+                  className={`p-1.5 rounded-md transition cursor-pointer ${
+                    isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
                   }`}
+                  aria-label="Close modal"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
@@ -333,19 +379,26 @@ export const ProjectsSection: React.FC<Props> = ({ roleFilter }) => {
                       navigator.clipboard.writeText(activeCodeSnippet.codeSnippet.code);
                     }
                   }}
-                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-lg transition shadow-sm"
+                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-lg transition shadow-sm cursor-pointer"
                 >
                   Copy Snippet
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
-        {/* Live Simulator Modal */}
-        {activeDemoProject && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-sm overflow-y-auto">
-            <div className="relative w-full max-w-5xl my-auto">
+        {/* Live Simulator Modal rendered cleanly via Portal */}
+        {activeDemoProject && createPortal(
+          <div 
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md overflow-y-auto"
+            onClick={() => setActiveDemoProject(null)}
+          >
+            <div 
+              className="relative w-full max-w-5xl my-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
               {activeDemoProject === 'crypto-portfolio-automation' && (
                 <CryptoDashboardDemo onClose={() => setActiveDemoProject(null)} />
               )}
@@ -353,7 +406,8 @@ export const ProjectsSection: React.FC<Props> = ({ roleFilter }) => {
                 <HRAttritionDemo onClose={() => setActiveDemoProject(null)} />
               )}
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </section>

@@ -11,7 +11,7 @@ export const profileData: ProfileData = {
   email: "priyanshuk1601@gmail.com",
   phone: "+91 7646091624",
   location: "Udaipur, Rajasthan (Open to Anywhere in India)",
-  linkedin: "https://linkedin.com/in/priyanshu-kumar-analytics",
+  linkedin: "https://www.linkedin.com/in/priyanshu-kumar-0aa259227/",
   github: "https://github.com/Priyanshu-kumar11",
   summary:
     "Data & Business Analyst with hands-on experience gathering requirements from business stakeholders and process owners, then translating them into clear specification documents within an Agile framework. Skilled in Power BI, DAX, SQL, and Advanced Excel to build monthly, quarterly, and yearly dashboards that turn operational data into decision-ready insights, backed by a strong foundation in data validation, discrepancy analysis, and process documentation gained from managing UAT and BOT output testing. Comfortable partnering with cross-functional teams through sprint calls and stakeholder meetings to align on priorities, track delivery, and drive process improvements.",
@@ -95,10 +95,16 @@ export const projects: Project[] = [
       language: "javascript",
       title: "Google Apps Script - CoinGecko API Fetch & Multi-Tab Update Engine",
       code: `/**
- * CryptoTracker Automation Script
+ * CryptoTracker Automation Script & Deployed Web App
  * Author: Priyanshu Kumar
- * Sheet: https://docs.google.com/spreadsheets/d/1_SpPacj2CpRXJv6S1yaOWxR4ocmxCS_RPi84Ry8eecU/edit?usp=sharing
+ * Web App: https://script.google.com/macros/s/AKfycbxIvAivZbnGFA0aHX1u_lt8WFAVB4lV1vwuafXcvyijJQeT6uzJfxo33DWdwYLIdx1p/exec
  */
+
+function doGet(e) {
+  return HtmlService.createHtmlOutputFromFile('Index')
+    .setTitle('CryptoTracker Automation - Priyanshu Kumar')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
 
 function updateLivePricesAndPortfolio() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -140,7 +146,8 @@ function updateLivePricesAndPortfolio() {
     },
     demoType: "crypto-sheets",
     githubUrl: "https://github.com/Priyanshu-kumar11",
-    liveUrl: "https://docs.google.com/spreadsheets/d/1_SpPacj2CpRXJv6S1yaOWxR4ocmxCS_RPi84Ry8eecU/edit?usp=sharing"
+    liveUrl: "https://script.google.com/macros/s/AKfycbxIvAivZbnGFA0aHX1u_lt8WFAVB4lV1vwuafXcvyijJQeT6uzJfxo33DWdwYLIdx1p/exec",
+    appsScriptUrl: "https://script.google.com/macros/s/AKfycbxIvAivZbnGFA0aHX1u_lt8WFAVB4lV1vwuafXcvyijJQeT6uzJfxo33DWdwYLIdx1p/exec"
   },
   {
     id: "hr-employee-attrition-dashboard",

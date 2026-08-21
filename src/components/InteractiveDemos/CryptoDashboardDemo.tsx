@@ -219,7 +219,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
   const bestCoin = sortedByReturn[0]?.coinId || 'None';
   const worstCoin = sortedByReturn[sortedByReturn.length - 1]?.coinId || 'None';
 
-  const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1_SpPacj2CpRXJv6S1yaOWxR4ocmxCS_RPi84Ry8eecU/edit?usp=sharing';
+  const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxIvAivZbnGFA0aHX1u_lt8WFAVB4lV1vwuafXcvyijJQeT6uzJfxo33DWdwYLIdx1p/exec';
 
   // Add / Upsert coin handler
   const handleAddCoinSubmit = (e: React.FormEvent) => {
@@ -633,14 +633,15 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
           </button>
 
           <a
-            href={GOOGLE_SHEET_URL}
+            href={APPS_SCRIPT_WEB_APP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl transition shadow-md shadow-emerald-600/30 active:scale-95"
-            title="Open real Google Spreadsheet in new tab"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-md shadow-blue-600/30 active:scale-95"
+            title="Open deployed Google Apps Script Web App in new tab"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Google Sheets</span>
+            <span className="hidden sm:inline">Apps Script Web App</span>
+            <span className="sm:hidden">Web App</span>
           </a>
 
           <button
@@ -731,22 +732,24 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
         {viewMode === 'code' ? (
           /* Code View */
           <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <Code className="w-5 h-5 text-emerald-400" />
                 <h4 className="font-bold text-white text-sm">
                   Google Apps Script (`Code.gs`)
                 </h4>
               </div>
-              <a
-                href={GOOGLE_SHEET_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-emerald-400 hover:underline flex items-center gap-1"
-              >
-                <span>View in Google Sheets Extensions &gt; Apps Script</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
+              <div className="flex items-center gap-3">
+                <a
+                  href={APPS_SCRIPT_WEB_APP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-sky-400 hover:underline flex items-center gap-1 font-semibold"
+                >
+                  <span>Launch Deployed Web App</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
             </div>
 
             <div className="p-4 bg-slate-900 rounded-xl border border-slate-800 font-mono text-xs text-emerald-300 leading-relaxed overflow-x-auto">
@@ -2316,15 +2319,15 @@ function updateLivePricesAndPortfolio() {
         <div className="hidden sm:flex items-center gap-3 text-[11px] text-slate-400">
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>CoinGecko API Sync Ready</span>
+            <span>CoinGecko API Ready</span>
           </span>
           <a
-            href={GOOGLE_SHEET_URL}
+            href={APPS_SCRIPT_WEB_APP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-emerald-400 hover:underline flex items-center gap-1 font-medium"
+            className="text-sky-400 hover:underline flex items-center gap-1 font-semibold"
           >
-            <span>docs.google.com/spreadsheets</span>
+            <span>Apps Script Web App</span>
             <ExternalLink className="w-3 h-3" />
           </a>
         </div>
