@@ -40,7 +40,7 @@ export const ContactSection: React.FC = () => {
 
   return (
     <section id="contact" className={`py-16 sm:py-20 border-t transition-colors duration-300 ${
-      isDark ? 'bg-[#0b0f19] border-slate-800' : 'bg-white border-slate-200'
+      isDark ? 'bg-[#0b0f19]/75 border-slate-800' : 'bg-white/60 border-slate-200'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">

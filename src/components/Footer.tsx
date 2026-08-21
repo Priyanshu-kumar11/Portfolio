@@ -17,7 +17,7 @@ export const Footer: React.FC<Props> = ({ onOpenResume }) => {
 
   return (
     <footer className={`border-t py-10 text-xs transition-colors duration-300 ${
-      isDark ? 'bg-[#080c16] border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-600'
+      isDark ? 'bg-[#080c16]/85 border-slate-800 text-slate-400' : 'bg-slate-50/80 border-slate-200 text-slate-600'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className={`flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b ${

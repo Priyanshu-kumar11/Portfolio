@@ -11,7 +11,7 @@ export const InteractiveDemosSection: React.FC = () => {
 
   return (
     <section id="interactive-demos" className={`py-16 sm:py-20 border-t transition-colors duration-300 ${
-      isDark ? 'bg-[#080d1a] border-slate-800' : 'bg-slate-50 border-slate-200'
+      isDark ? 'bg-[#080d1a]/80 border-slate-800' : 'bg-slate-50/65 border-slate-200'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
