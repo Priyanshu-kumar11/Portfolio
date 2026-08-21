@@ -10,9 +10,9 @@ export const profileData: ProfileData = {
   ],
   email: "priyanshuk1601@gmail.com",
   phone: "+91 7646091624",
-  location: "Lucknow, Uttar Pradesh, India",
+  location: "Udaipur, Rajasthan (Open to Anywhere in India)",
   linkedin: "https://linkedin.com/in/priyanshu-kumar-analytics",
-  github: "https://github.com/priyanshu-kumar-dev",
+  github: "https://github.com/Priyanshu-kumar11",
   summary:
     "Data & Business Analyst with hands-on experience gathering requirements from business stakeholders and process owners, then translating them into clear specification documents within an Agile framework. Skilled in Power BI, DAX, SQL, and Advanced Excel to build monthly, quarterly, and yearly dashboards that turn operational data into decision-ready insights, backed by a strong foundation in data validation, discrepancy analysis, and process documentation gained from managing UAT and BOT output testing. Comfortable partnering with cross-functional teams through sprint calls and stakeholder meetings to align on priorities, track delivery, and drive process improvements.",
   stats: [
@@ -139,7 +139,7 @@ function updateLivePricesAndPortfolio() {
 }`
     },
     demoType: "crypto-sheets",
-    githubUrl: "https://github.com/priyanshu-kumar-dev/crypto-portfolio-automation",
+    githubUrl: "https://github.com/Priyanshu-kumar11",
     liveUrl: "https://docs.google.com/spreadsheets/d/1_SpPacj2CpRXJv6S1yaOWxR4ocmxCS_RPi84Ry8eecU/edit?usp=sharing"
   },
   {
@@ -194,7 +194,7 @@ SWITCH(
 )`
     },
     demoType: "hr-powerbi",
-    githubUrl: "https://github.com/priyanshu-kumar-dev/hr-attrition-powerbi",
+    githubUrl: "https://github.com/Priyanshu-kumar11",
     liveUrl: "#"
   },
   {
@@ -218,7 +218,7 @@ SWITCH(
       { label: "Documentation", value: "Full SOP Standard" }
     ],
     demoType: "none",
-    githubUrl: "https://github.com/priyanshu-kumar-dev",
+    githubUrl: "https://github.com/Priyanshu-kumar11",
     liveUrl: "#"
   }
 ];

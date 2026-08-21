@@ -1,13 +1,12 @@
 import React from 'react';
-import { FileText, Code, ArrowUp, Linkedin, Github, Mail, Phone } from 'lucide-react';
+import { FileText, ArrowUp, Linkedin, Github, Mail, Phone } from 'lucide-react';
 import { profileData } from '../data/portfolioData';
 
 interface Props {
   onOpenResume: () => void;
-  onOpenCodeExplorer: () => void;
 }
 
-export const Footer: React.FC<Props> = ({ onOpenResume, onOpenCodeExplorer }) => {
+export const Footer: React.FC<Props> = ({ onOpenResume }) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -35,13 +34,12 @@ export const Footer: React.FC<Props> = ({ onOpenResume, onOpenCodeExplorer }) =>
               <span>Full Resume</span>
             </button>
 
-            <button
-              onClick={onOpenCodeExplorer}
+            <a
+              href="#contact"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition"
             >
-              <Code className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Code &amp; Deploy Guide</span>
-            </button>
+              <span>Contact Priyanshu</span>
+            </a>
 
             <button
               onClick={scrollToTop}
@@ -55,7 +53,7 @@ export const Footer: React.FC<Props> = ({ onOpenResume, onOpenCodeExplorer }) =>
 
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
           <div>
-            © {new Date().getFullYear()} Priyanshu Kumar. Built with React, TypeScript &amp; Tailwind CSS.
+            © {new Date().getFullYear()} Priyanshu Kumar. Portfolio &amp; Project Case Studies.
           </div>
           <div className="flex items-center gap-4">
             <a href={profileData.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition">

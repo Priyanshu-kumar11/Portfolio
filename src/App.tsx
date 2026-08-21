@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { ScrollProgressBar, CustomCursor } from './components/ScrollProgressBar';
+import { DataBusinessBackground } from './components/DataBusinessBackground';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { DualRoleBridge } from './components/DualRoleBridge';
@@ -16,15 +17,16 @@ import { EducationSection } from './components/EducationSection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 import { InteractiveResumeModal } from './components/InteractiveResumeModal';
-import { CodeExplorerModal } from './components/CodeExplorerModal';
 
 export default function App() {
   const [isResumeOpen, setIsResumeOpen] = useState(false);
-  const [isCodeExplorerOpen, setIsCodeExplorerOpen] = useState(false);
   const [roleFilter, setRoleFilter] = useState<'all' | 'data-analyst' | 'business-analyst'>('all');
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-slate-950 relative">
+      {/* Background data & business network animations */}
+      <DataBusinessBackground />
+
       {/* Scroll indicator bar */}
       <ScrollProgressBar />
 
@@ -34,7 +36,6 @@ export default function App() {
       {/* Main sticky navigation */}
       <Navbar
         onOpenResume={() => setIsResumeOpen(true)}
-        onOpenCodeExplorer={() => setIsCodeExplorerOpen(true)}
         roleFilter={roleFilter}
         setRoleFilter={setRoleFilter}
       />
@@ -65,18 +66,12 @@ export default function App() {
       {/* Footer */}
       <Footer
         onOpenResume={() => setIsResumeOpen(true)}
-        onOpenCodeExplorer={() => setIsCodeExplorerOpen(true)}
       />
 
-      {/* Modal Dialogs */}
+      {/* Modal Dialog */}
       <InteractiveResumeModal
         isOpen={isResumeOpen}
         onClose={() => setIsResumeOpen(false)}
-      />
-
-      <CodeExplorerModal
-        isOpen={isCodeExplorerOpen}
-        onClose={() => setIsCodeExplorerOpen(false)}
       />
     </div>
   );

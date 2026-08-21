@@ -1,23 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, FileText, Code, Sparkles, ChevronDown, BarChart2, Briefcase, Layers } from 'lucide-react';
+import { Menu, X, FileText, Sparkles, ChevronDown, BarChart2, Briefcase, Layers } from 'lucide-react';
 import { profileData } from '../data/portfolioData';
 
 interface Props {
   onOpenResume: () => void;
-  onOpenCodeExplorer: () => void;
   roleFilter: 'all' | 'data-analyst' | 'business-analyst';
   setRoleFilter: (filter: 'all' | 'data-analyst' | 'business-analyst') => void;
 }
 
 export const Navbar: React.FC<Props> = ({
   onOpenResume,
-  onOpenCodeExplorer,
   roleFilter,
   setRoleFilter,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -61,7 +58,7 @@ export const Navbar: React.FC<Props> = ({
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Available for hire" />
             </div>
             <div className="text-[11px] text-slate-400 font-medium hidden sm:block">
-              Data & Business Analyst
+              Data &amp; Business Analyst
             </div>
           </div>
         </a>
@@ -118,15 +115,12 @@ export const Navbar: React.FC<Props> = ({
 
         {/* Quick Action Buttons */}
         <div className="hidden sm:flex items-center gap-2.5">
-          <button
-            id="nav-code-deploy-btn"
-            onClick={onOpenCodeExplorer}
+          <a
+            href="#contact"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-medium transition"
-            title="View folder architecture & Netlify/Vercel deployment setup"
           >
-            <Code className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Code & Deploy</span>
-          </button>
+            <span>Get in Touch</span>
+          </a>
 
           <button
             id="nav-resume-btn"
@@ -215,16 +209,6 @@ export const Navbar: React.FC<Props> = ({
           </div>
 
           <div className="pt-2 flex flex-col gap-2">
-            <button
-              onClick={() => {
-                onOpenCodeExplorer();
-                setMobileMenuOpen(false);
-              }}
-              className="w-full py-2.5 bg-slate-900 border border-slate-800 text-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-2"
-            >
-              <Code className="w-4 h-4 text-indigo-400" />
-              Folder Architecture & Deploy Guide
-            </button>
             <button
               onClick={() => {
                 onOpenResume();

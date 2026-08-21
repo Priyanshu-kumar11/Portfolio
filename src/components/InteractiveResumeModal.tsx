@@ -19,7 +19,7 @@ export const InteractiveResumeModal: React.FC<Props> = ({ isOpen, onClose }) => 
   const handleCopyText = () => {
     const rawText = `
 Priyanshu Kumar
-${profileData.phone} | ${profileData.email} | LinkedIn: ${profileData.linkedin} | GitHub: ${profileData.github}
+${profileData.phone} | ${profileData.email} | Location: ${profileData.location} | LinkedIn: ${profileData.linkedin} | GitHub: ${profileData.github}
 
 PROFILE SUMMARY
 ${profileData.summary}
@@ -110,6 +110,10 @@ AI Tools: ChatGPT, Claude AI, GitHub Copilot, Gemini
               Priyanshu Kumar
             </h1>
             <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-2 text-xs text-slate-400 print:text-gray-700">
+              <span className="flex items-center gap-1 text-slate-300 font-medium print:text-black">
+                📍 {profileData.location}
+              </span>
+              <span>•</span>
               <span className="flex items-center gap-1">
                 <Phone className="w-3 h-3 text-cyan-400 print:hidden" />
                 {profileData.phone}

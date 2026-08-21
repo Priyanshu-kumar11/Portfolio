@@ -109,9 +109,15 @@ export const ContactSection: React.FC = () => {
 
               {/* Location & Socials */}
               <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-                <div className="flex items-center gap-2 text-xs text-slate-300">
-                  <MapPin className="w-4 h-4 text-rose-400 shrink-0" />
-                  <span>{profileData.location}</span>
+                <div className="flex items-start gap-2.5 text-xs text-slate-300">
+                  <MapPin className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-semibold text-white">Current Location: Udaipur, Rajasthan</div>
+                    <div className="text-[11px] text-emerald-400 font-medium mt-0.5 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Open to Relocate Anywhere in India / Remote
+                    </div>
+                  </div>
                 </div>
                 <div className="pt-2 border-t border-slate-800 flex gap-2">
                   <a
