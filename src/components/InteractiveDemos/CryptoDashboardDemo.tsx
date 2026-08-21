@@ -98,21 +98,73 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState<'24H' | '7D' | '30D' | 'ALL'>('24H');
 
-  // Modal / Form state for Adding / Customizing Coins
+  // Modal / Form state for Adding / Selling / Deleting Coins
   const [isAddCoinOpen, setIsAddCoinOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'add' | 'sell' | 'delete'>('add');
+  
+  // Add mode state
   const [newCoinType, setNewCoinType] = useState<string>('cardano');
   const [customCoinId, setCustomCoinId] = useState('');
   const [customSymbol, setCustomSymbol] = useState('');
   const [customQuantity, setCustomQuantity] = useState('50');
   const [customBuyPrice, setCustomBuyPrice] = useState('0.55');
   const [customCurrentPrice, setCustomCurrentPrice] = useState('0.68');
+  
+  // Sell mode state
+  const [sellCoinId, setSellCoinId] = useState<string>('dogecoin');
+  const [sellQuantity, setSellQuantity] = useState<string>('50');
+  const [sellPrice, setSellPrice] = useState<string>('0.0803');
+
+  // Delete mode state
+  const [deleteCoinId, setDeleteCoinId] = useState<string>('dogecoin');
+
+  // Feedback & Validation
   const [formError, setFormError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Edit inline state
   const [editingCoinId, setEditingCoinId] = useState<string | null>(null);
   const [editQuantity, setEditQuantity] = useState<string>('');
   const [editBuyPrice, setEditBuyPrice] = useState<string>('');
   const [editCurrentPrice, setEditCurrentPrice] = useState<string>('');
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage((prev) => (prev === msg ? null : prev));
+    }, 4500);
+  };
+
+  // Open Add modal
+  const openAddModal = (presetId: string = 'cardano') => {
+    setModalMode('add');
+    handleSelectPreset(presetId);
+    setFormError(null);
+    setIsAddCoinOpen(true);
+  };
+
+  // Open Sell modal
+  const openSellModal = (coinId?: string) => {
+    const targetId = coinId || (holdings[0]?.coinId ?? 'dogecoin');
+    const target = holdings.find(h => h.coinId === targetId) || holdings[0];
+    if (target) {
+      setSellCoinId(target.coinId);
+      setSellQuantity(target.quantity.toString());
+      setSellPrice(target.currentPrice.toString());
+    }
+    setModalMode('sell');
+    setFormError(null);
+    setIsAddCoinOpen(true);
+  };
+
+  // Open Delete modal
+  const openDeleteModal = (coinId?: string) => {
+    const targetId = coinId || (holdings[0]?.coinId ?? 'dogecoin');
+    setDeleteCoinId(targetId);
+    setModalMode('delete');
+    setFormError(null);
+    setIsAddCoinOpen(true);
+  };
 
   // Handle preset selection
   const handleSelectPreset = (presetId: string) => {
@@ -247,11 +299,97 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
 
     setIsAddCoinOpen(false);
     setLastRefreshedTime(new Date().toString());
+    showToast(`Added / Updated ${qty} ${symbol} at $${currP.toLocaleString()} to portfolio.`);
   };
 
-  // Remove a coin
-  const handleRemoveCoin = (coinId: string) => {
-    setHoldings(prev => prev.filter(c => c.coinId !== coinId));
+  // Sell coin handler
+  const handleSellSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+
+    const holding = holdings.find(h => h.coinId === sellCoinId);
+    if (!holding) {
+      setFormError('Please select an active holding to sell.');
+      return;
+    }
+
+    const qtyToSell = parseFloat(sellQuantity);
+    const sellP = parseFloat(sellPrice);
+
+    if (isNaN(qtyToSell) || qtyToSell <= 0) {
+      setFormError('Please enter a valid positive quantity to sell.');
+      return;
+    }
+    if (qtyToSell > holding.quantity) {
+      setFormError(`Cannot sell ${qtyToSell} ${holding.symbol}. You only hold ${holding.quantity}.`);
+      return;
+    }
+    if (isNaN(sellP) || sellP <= 0) {
+      setFormError('Please enter a valid sell price.');
+      return;
+    }
+
+    const proceeds = qtyToSell * sellP;
+    const costBasis = qtyToSell * holding.buyPrice;
+    const realizedPL = proceeds - costBasis;
+    const realizedPLPct = costBasis > 0 ? (realizedPL / costBasis) * 100 : 0;
+    const now = '8/21/2026';
+    const timeStr = new Date().toLocaleTimeString();
+
+    if (qtyToSell >= holding.quantity) {
+      // Complete exit (100% sold)
+      setHoldings(prev => prev.filter(c => c.coinId !== sellCoinId));
+    } else {
+      // Partial sell
+      const remainingQty = Number((holding.quantity - qtyToSell).toFixed(6));
+      setHoldings(prev =>
+        prev.map(c =>
+          c.coinId === sellCoinId
+            ? { ...c, quantity: remainingQty, lastUpdated: now }
+            : c
+        )
+      );
+    }
+
+    // Log to history
+    setHistoryRows(prev => [
+      {
+        timestamp: `${now} ${timeStr}`,
+        coinId: sellCoinId,
+        price: sellP,
+        change: Number(realizedPLPct.toFixed(2)),
+        status: `SOLD (${realizedPL >= 0 ? '+$' : '-$'}${Math.abs(realizedPL).toFixed(2)})`
+      },
+      ...prev.slice(0, 30)
+    ]);
+
+    setIsAddCoinOpen(false);
+    setLastRefreshedTime(new Date().toString());
+    showToast(`Sold ${qtyToSell} ${holding.symbol} @ $${sellP.toLocaleString()} • Realized P&L: ${realizedPL >= 0 ? '+' : '-'}$${Math.abs(realizedPL).toFixed(2)} (${realizedPLPct >= 0 ? '+' : ''}${realizedPLPct.toFixed(1)}%)`);
+  };
+
+  // Remove / Delete coin handler (Mistake correction)
+  const handleDeleteMistake = (coinIdToDelete: string) => {
+    const holding = holdings.find(c => c.coinId === coinIdToDelete);
+    if (!holding) return;
+
+    setHoldings(prev => prev.filter(c => c.coinId !== coinIdToDelete));
+
+    // Log to history as mistake removal
+    setHistoryRows(prev => [
+      {
+        timestamp: `8/21/2026 ${new Date().toLocaleTimeString()}`,
+        coinId: coinIdToDelete,
+        price: 0,
+        change: 0,
+        status: 'DELETED (Correction)'
+      },
+      ...prev.slice(0, 30)
+    ]);
+
+    setIsAddCoinOpen(false);
+    setLastRefreshedTime(new Date().toString());
+    showToast(`Removed ${holding.symbol} (${holding.coinId}) from portfolio (Mistake Corrected).`);
   };
 
   // Reset to default
@@ -260,6 +398,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
     setHistoryRows(initialHistoryRows);
     setLastRefreshedTime(new Date().toString());
     setEditingCoinId(null);
+    showToast('Reset portfolio tracker to initial sample holdings.');
   };
 
   // Start inline editing
@@ -284,6 +423,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
             : c
         )
       );
+      showToast(`Updated ${coinId.toUpperCase()} values.`);
     }
     setEditingCoinId(null);
   };
@@ -452,15 +592,34 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
         <div className="flex items-center flex-wrap gap-2">
           {/* Add Coin Button */}
           <button
-            onClick={() => {
-              handleSelectPreset('cardano');
-              setIsAddCoinOpen(true);
-            }}
+            onClick={() => openAddModal('cardano')}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl transition shadow-md shadow-blue-600/30 active:scale-95 cursor-pointer"
             title="Add new crypto holding to demo"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Add Crypto Coin</span>
+            <span>Add Coin</span>
+          </button>
+
+          {/* Sell / Exit Button */}
+          <button
+            onClick={() => openSellModal()}
+            disabled={holdings.length === 0}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 font-bold text-xs rounded-xl transition active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Sell or liquidate crypto holdings with realized P&L"
+          >
+            <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Sell / Trade</span>
+          </button>
+
+          {/* Delete Mistake Button */}
+          <button
+            onClick={() => openDeleteModal()}
+            disabled={holdings.length === 0}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 font-semibold text-xs rounded-xl transition active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Delete accidental holding or mistake"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+            <span className="hidden sm:inline">Delete</span>
           </button>
 
           {/* Reset button if modified */}
@@ -470,7 +629,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
             title="Reset portfolio to default demo coins"
           >
             <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-            <span className="hidden sm:inline">Reset Defaults</span>
+            <span className="hidden md:inline">Reset Defaults</span>
           </button>
 
           <a
@@ -481,7 +640,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
             title="Open real Google Spreadsheet in new tab"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Open in Google Sheets</span>
+            <span className="hidden md:inline">Google Sheets</span>
           </a>
 
           <button
@@ -491,7 +650,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
             title="Simulate Google Apps Script trigger fetching CoinGecko API"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-cyan-400 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>{isRefreshing ? 'Syncing...' : 'Run Apps Script API'}</span>
+            <span className="hidden sm:inline">{isRefreshing ? 'Syncing...' : 'Run API'}</span>
           </button>
 
           <button
@@ -499,7 +658,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
             className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 rounded-xl border border-slate-700 transition cursor-pointer"
           >
             <Code className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden sm:inline">{viewMode === 'sheets' ? 'View Code' : 'View Sheet'}</span>
+            <span className="hidden sm:inline">{viewMode === 'sheets' ? 'Code' : 'Sheet'}</span>
           </button>
 
           {onClose && (
@@ -520,7 +679,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
             {selectedCell}
           </div>
           <span className="text-slate-500 font-serif italic text-sm">fx</span>
-          <div className="text-cyan-300 truncate max-w-md">
+          <div className="text-cyan-300 truncate max-w-xs sm:max-w-md">
             {activeSheetTab === 'Dashboard' && `=SPARKLINE(History!B2:B30, {"charttype","column"; "color","cyan"}) [Live BI Visuals]`}
             {activeSheetTab === 'Portfolio' && '=C2*E2 [Current Value = Quantity * Current Price]'}
             {activeSheetTab === 'Live Prices' && '=fetchLiveCryptoPrices("coingecko_v3")'}
@@ -528,34 +687,44 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
           </div>
         </div>
 
-        {/* Quick presets pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
+        {/* Quick actions & presets pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 max-w-full">
           <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">Quick Add:</span>
-          {PRESET_COINS.filter(p => !holdings.some(h => h.coinId === p.coinId)).slice(0, 4).map(preset => (
+          {PRESET_COINS.filter(p => !holdings.some(h => h.coinId === p.coinId)).slice(0, 3).map(preset => (
             <button
               key={preset.coinId}
-              onClick={() => {
-                handleSelectPreset(preset.coinId);
-                setIsAddCoinOpen(true);
-              }}
-              className="px-2 py-0.5 text-[11px] bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-300 rounded-md transition flex items-center gap-1 cursor-pointer"
+              onClick={() => openAddModal(preset.coinId)}
+              className="px-2 py-0.5 text-[11px] bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-300 rounded-md transition flex items-center gap-1 cursor-pointer shrink-0"
             >
               <Plus className="w-2.5 h-2.5" />
               <span>{preset.symbol}</span>
             </button>
           ))}
           <button
-            onClick={() => {
-              handleSelectPreset('custom');
-              setIsAddCoinOpen(true);
-            }}
-            className="px-2 py-0.5 text-[11px] bg-blue-950 hover:bg-blue-900 border border-blue-700 text-blue-300 rounded-md transition flex items-center gap-1 cursor-pointer"
+            onClick={() => openAddModal('custom')}
+            className="px-2 py-0.5 text-[11px] bg-blue-950 hover:bg-blue-900 border border-blue-700 text-blue-300 rounded-md transition flex items-center gap-1 cursor-pointer shrink-0"
           >
             <Plus className="w-2.5 h-2.5" />
             <span>Custom</span>
           </button>
         </div>
       </div>
+
+      {/* Floating Action Toast Notification */}
+      {toastMessage && (
+        <div className="bg-emerald-950/90 border-b border-emerald-700/60 px-4 py-2 text-xs text-emerald-200 flex items-center justify-between gap-2 shadow-lg animate-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-mono">{toastMessage}</span>
+          </div>
+          <button
+            onClick={() => setToastMessage(null)}
+            className="text-emerald-400 hover:text-emerald-100 p-0.5 rounded cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-auto bg-slate-950 p-4 sm:p-6 relative">
@@ -1178,13 +1347,22 @@ function updateLivePricesAndPortfolio() {
                                   </span>
                                 </td>
                                 <td className="py-2.5 px-2 text-center">
-                                  <button
-                                    onClick={() => handleRemoveCoin(row.coinId)}
-                                    className="p-1 text-slate-500 hover:text-rose-400 transition rounded hover:bg-slate-800 cursor-pointer"
-                                    title="Remove from demo"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
+                                  <div className="flex items-center justify-center gap-1">
+                                    <button
+                                      onClick={() => openSellModal(row.coinId)}
+                                      className="p-1 text-emerald-400 hover:text-emerald-300 transition rounded hover:bg-emerald-950/60 cursor-pointer"
+                                      title={`Sell ${row.symbol}`}
+                                    >
+                                      <DollarSign className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => openDeleteModal(row.coinId)}
+                                      className="p-1 text-slate-500 hover:text-rose-400 transition rounded hover:bg-rose-950/60 cursor-pointer"
+                                      title={`Delete ${row.symbol} (Mistake)`}
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             ))
@@ -1345,18 +1523,25 @@ function updateLivePricesAndPortfolio() {
                                     </button>
                                   </div>
                                 ) : (
-                                  <div className="flex items-center justify-center gap-1.5">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <button
+                                      onClick={() => openSellModal(row.coinId)}
+                                      className="p-1 text-emerald-400 hover:text-emerald-300 rounded hover:bg-emerald-950/60 cursor-pointer"
+                                      title={`Sell ${row.symbol}`}
+                                    >
+                                      <DollarSign className="w-3.5 h-3.5" />
+                                    </button>
                                     <button
                                       onClick={() => startEditing(row)}
                                       className="p-1 text-slate-400 hover:text-sky-300 rounded hover:bg-slate-800 cursor-pointer"
-                                      title="Edit holding"
+                                      title="Edit holding values"
                                     >
                                       <Edit3 className="w-3.5 h-3.5" />
                                     </button>
                                     <button
-                                      onClick={() => handleRemoveCoin(row.coinId)}
-                                      className="p-1 text-slate-500 hover:text-rose-400 rounded hover:bg-slate-800 cursor-pointer"
-                                      title="Delete holding"
+                                      onClick={() => openDeleteModal(row.coinId)}
+                                      className="p-1 text-slate-500 hover:text-rose-400 rounded hover:bg-rose-950/60 cursor-pointer"
+                                      title={`Delete ${row.symbol} (Mistake)`}
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
                                     </button>
@@ -1492,198 +1677,557 @@ function updateLivePricesAndPortfolio() {
           </div>
         )}
 
-        {/* Add / Buy Coin Modal */}
+        {/* Add / Sell / Delete Crypto Modal */}
         {isAddCoinOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs">
-            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-lg w-full shadow-2xl text-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-500/40 flex items-center justify-center text-sky-400">
-                    <Plus className="w-4 h-4" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/85 backdrop-blur-sm overflow-hidden">
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl text-slate-100 flex flex-col max-h-[92vh] sm:max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
+              {/* Modal Header */}
+              <div className="p-3.5 sm:p-5 border-b border-slate-800 shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${
+                      modalMode === 'add' ? 'bg-blue-600/20 border-blue-500/40 text-sky-400' :
+                      modalMode === 'sell' ? 'bg-emerald-600/20 border-emerald-500/40 text-emerald-400' :
+                      'bg-rose-600/20 border-rose-500/40 text-rose-400'
+                    }`}>
+                      {modalMode === 'add' && <Plus className="w-4 h-4" />}
+                      {modalMode === 'sell' && <DollarSign className="w-4 h-4" />}
+                      {modalMode === 'delete' && <Trash2 className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-sm sm:text-base">
+                        {modalMode === 'add' && 'Add / Buy Crypto Position'}
+                        {modalMode === 'sell' && 'Sell / Trim Crypto Holding'}
+                        {modalMode === 'delete' && 'Delete / Remove Holding'}
+                      </h3>
+                      <p className="text-[11px] text-slate-400">
+                        {modalMode === 'add' && 'Add or increase asset holdings in the spreadsheet.'}
+                        {modalMode === 'sell' && 'Liquidate or sell coins with calculated realized P&L.'}
+                        {modalMode === 'delete' && 'Remove accidental entries or mistakes from tracker.'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-white text-base">Add / Buy Crypto Coin</h3>
-                    <p className="text-xs text-slate-400">Add a coin position to update all dynamic dashboard charts.</p>
-                  </div>
+                  <button
+                    onClick={() => setIsAddCoinOpen(false)}
+                    className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setIsAddCoinOpen(false)}
-                  className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+
+                {/* Mode Selector Tabs */}
+                <div className="grid grid-cols-3 gap-1 mt-3 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => { setModalMode('add'); setFormError(null); }}
+                    className={`py-1.5 px-2 rounded-lg font-semibold transition flex items-center justify-center gap-1 cursor-pointer ${
+                      modalMode === 'add' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Buy / Add</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalMode('sell');
+                      setFormError(null);
+                      if (holdings.length > 0 && !holdings.some(h => h.coinId === sellCoinId)) {
+                        setSellCoinId(holdings[0].coinId);
+                        setSellQuantity(holdings[0].quantity.toString());
+                        setSellPrice(holdings[0].currentPrice.toString());
+                      }
+                    }}
+                    disabled={holdings.length === 0}
+                    className={`py-1.5 px-2 rounded-lg font-semibold transition flex items-center justify-center gap-1 cursor-pointer ${
+                      modalMode === 'sell' ? 'bg-emerald-600 text-white shadow-sm' : holdings.length === 0 ? 'opacity-40 cursor-not-allowed text-slate-500' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <DollarSign className="w-3.5 h-3.5" />
+                    <span>Sell ({holdings.length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalMode('delete');
+                      setFormError(null);
+                      if (holdings.length > 0 && !holdings.some(h => h.coinId === deleteCoinId)) {
+                        setDeleteCoinId(holdings[0].coinId);
+                      }
+                    }}
+                    disabled={holdings.length === 0}
+                    className={`py-1.5 px-2 rounded-lg font-semibold transition flex items-center justify-center gap-1 cursor-pointer ${
+                      modalMode === 'delete' ? 'bg-rose-600 text-white shadow-sm' : holdings.length === 0 ? 'opacity-40 cursor-not-allowed text-slate-500' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete</span>
+                  </button>
+                </div>
               </div>
 
-              {formError && (
-                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                  <span>{formError}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleAddCoinSubmit} className="space-y-4 text-xs">
-                {/* Preset Selector */}
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1.5">
-                    Select Coin Preset or Custom
-                  </label>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {PRESET_COINS.map(p => (
-                      <button
-                        type="button"
-                        key={p.coinId}
-                        onClick={() => handleSelectPreset(p.coinId)}
-                        className={`p-2 rounded-xl border text-left transition cursor-pointer ${
-                          newCoinType === p.coinId
-                            ? 'bg-blue-600/20 border-blue-500 text-white font-bold'
-                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                        }`}
-                      >
-                        <div className="font-semibold text-xs text-white">{p.symbol}</div>
-                        <div className="text-[10px] text-slate-400 truncate capitalize">{p.coinId}</div>
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPreset('custom')}
-                      className={`p-2 rounded-xl border text-left transition cursor-pointer ${
-                        newCoinType === 'custom'
-                          ? 'bg-blue-600/20 border-blue-500 text-white font-bold'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="font-semibold text-xs text-sky-400">+ Custom</div>
-                      <div className="text-[10px] text-slate-400">Enter Any</div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Custom Name / Symbol if custom */}
-                {newCoinType === 'custom' && (
-                  <div className="grid grid-cols-2 gap-3 pt-1">
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Coin Name / ID</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. sui, polkadot, near"
-                        required
-                        value={customCoinId}
-                        onChange={(e) => setCustomCoinId(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:border-blue-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Symbol</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. SUI, DOT, NEAR"
-                        required
-                        value={customSymbol}
-                        onChange={(e) => setCustomSymbol(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono uppercase focus:border-blue-500 focus:outline-none"
-                      />
-                    </div>
+              {/* Scrollable Modal Body */}
+              <div className="p-3.5 sm:p-5 overflow-y-auto space-y-4 flex-1 text-xs">
+                {formError && (
+                  <div className="p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                    <span>{formError}</span>
                   </div>
                 )}
 
-                {/* Amount / Holdings */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-slate-300 font-semibold mb-1">
-                      Holdings Quantity
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      min="0.000001"
-                      required
-                      placeholder="e.g. 50"
-                      value={customQuantity}
-                      onChange={(e) => setCustomQuantity(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-300 font-semibold mb-1">
-                      Buy Price ($ USD)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      min="0.000001"
-                      required
-                      placeholder="e.g. 0.55"
-                      value={customBuyPrice}
-                      onChange={(e) => setCustomBuyPrice(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-300 font-semibold mb-1">
-                      Current Price ($ USD)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      min="0.000001"
-                      required
-                      placeholder="e.g. 0.68"
-                      value={customCurrentPrice}
-                      onChange={(e) => setCustomCurrentPrice(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Real-Time Preview Callout */}
-                {(() => {
-                  const q = parseFloat(customQuantity) || 0;
-                  const bp = parseFloat(customBuyPrice) || 0;
-                  const cp = parseFloat(customCurrentPrice) || 0;
-                  const cost = q * bp;
-                  const val = q * cp;
-                  const pl = val - cost;
-                  const ret = cost > 0 ? (pl / cost) * 100 : 0;
-
-                  return (
-                    <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1 text-[11px] font-mono">
-                      <div className="text-slate-400 flex justify-between">
-                        <span>Calculated Investment Cost:</span>
-                        <span className="text-white font-bold">${cost.toFixed(2)}</span>
-                      </div>
-                      <div className="text-slate-400 flex justify-between">
-                        <span>Calculated Current Value:</span>
-                        <span className="text-white font-bold">${val.toFixed(2)}</span>
-                      </div>
-                      <div className="text-slate-400 flex justify-between">
-                        <span>Simulated Profit / Loss:</span>
-                        <span className={`font-bold ${pl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {pl >= 0 ? '+$' : '-$'}{Math.abs(pl).toFixed(2)} ({ret >= 0 ? '+' : ''}{ret.toFixed(2)}%)
-                        </span>
+                {/* MODE 1: ADD / BUY */}
+                {modalMode === 'add' && (
+                  <form id="add-coin-form" onSubmit={handleAddCoinSubmit} className="space-y-3.5">
+                    {/* Preset Selector */}
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1.5">
+                        Select Asset Preset or Custom
+                      </label>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                        {PRESET_COINS.map(p => (
+                          <button
+                            type="button"
+                            key={p.coinId}
+                            onClick={() => handleSelectPreset(p.coinId)}
+                            className={`p-1.5 sm:p-2 rounded-xl border text-left transition cursor-pointer ${
+                              newCoinType === p.coinId
+                                ? 'bg-blue-600/25 border-blue-500 text-white font-bold'
+                                : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                            }`}
+                          >
+                            <div className="font-semibold text-xs text-white">{p.symbol}</div>
+                            <div className="text-[10px] text-slate-400 truncate capitalize">{p.coinId}</div>
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => handleSelectPreset('custom')}
+                          className={`p-1.5 sm:p-2 rounded-xl border text-left transition cursor-pointer ${
+                            newCoinType === 'custom'
+                              ? 'bg-blue-600/25 border-blue-500 text-white font-bold'
+                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="font-semibold text-xs text-sky-400">+ Custom</div>
+                          <div className="text-[10px] text-slate-400">Enter Any</div>
+                        </button>
                       </div>
                     </div>
-                  );
-                })()}
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setIsAddCoinOpen(false)}
-                    className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
+                    {/* Notice if already owned */}
+                    {(() => {
+                      const activeId = (newCoinType === 'custom' ? customCoinId : newCoinType).trim().toLowerCase();
+                      const existing = holdings.find(h => h.coinId.toLowerCase() === activeId);
+                      if (existing) {
+                        return (
+                          <div className="p-2 bg-blue-950/40 border border-blue-800/60 rounded-lg text-sky-300 text-[11px] flex items-center justify-between">
+                            <span>Currently owned: <strong>{existing.quantity} {existing.symbol}</strong> (${(existing.quantity * existing.currentPrice).toFixed(2)})</span>
+                            <span className="text-[10px] text-slate-400">Saving will update position</span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Custom Name / Symbol if custom */}
+                    {newCoinType === 'custom' && (
+                      <div className="grid grid-cols-2 gap-2.5 pt-1">
+                        <div>
+                          <label className="block text-slate-300 font-semibold mb-1">Coin ID / Name</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. sui, polkadot, near"
+                            required
+                            value={customCoinId}
+                            onChange={(e) => setCustomCoinId(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-300 font-semibold mb-1">Symbol</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. SUI, DOT, NEAR"
+                            required
+                            value={customSymbol}
+                            onChange={(e) => setCustomSymbol(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono uppercase focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Amount / Holdings */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">
+                          Holdings Quantity
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0.000001"
+                          required
+                          placeholder="e.g. 50"
+                          value={customQuantity}
+                          onChange={(e) => setCustomQuantity(e.target.value)}
+                          className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">
+                          Buy Price ($ USD)
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0.000001"
+                          required
+                          placeholder="e.g. 0.55"
+                          value={customBuyPrice}
+                          onChange={(e) => setCustomBuyPrice(e.target.value)}
+                          className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">
+                          Current Price ($ USD)
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0.000001"
+                          required
+                          placeholder="e.g. 0.68"
+                          value={customCurrentPrice}
+                          onChange={(e) => setCustomCurrentPrice(e.target.value)}
+                          className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Real-Time Preview Callout */}
+                    {(() => {
+                      const q = parseFloat(customQuantity) || 0;
+                      const bp = parseFloat(customBuyPrice) || 0;
+                      const cp = parseFloat(customCurrentPrice) || 0;
+                      const cost = q * bp;
+                      const val = q * cp;
+                      const pl = val - cost;
+                      const ret = cost > 0 ? (pl / cost) * 100 : 0;
+
+                      return (
+                        <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl space-y-1 text-[11px] font-mono">
+                          <div className="text-slate-400 flex justify-between">
+                            <span>Simulated Investment Cost:</span>
+                            <span className="text-white font-bold">${cost.toFixed(2)}</span>
+                          </div>
+                          <div className="text-slate-400 flex justify-between">
+                            <span>Simulated Market Value:</span>
+                            <span className="text-white font-bold">${val.toFixed(2)}</span>
+                          </div>
+                          <div className="text-slate-400 flex justify-between">
+                            <span>Simulated Unrealized P&amp;L:</span>
+                            <span className={`font-bold ${pl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {pl >= 0 ? '+$' : '-$'}{Math.abs(pl).toFixed(2)} ({ret >= 0 ? '+' : ''}{ret.toFixed(2)}%)
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </form>
+                )}
+
+                {/* MODE 2: SELL / TRIM */}
+                {modalMode === 'sell' && (
+                  <form id="sell-coin-form" onSubmit={handleSellSubmit} className="space-y-3.5">
+                    {/* Select Coin to Sell */}
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1.5">
+                        Select Holding to Sell / Liquidate
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                        {holdings.map(h => (
+                          <button
+                            type="button"
+                            key={h.coinId}
+                            onClick={() => {
+                              setSellCoinId(h.coinId);
+                              setSellQuantity(h.quantity.toString());
+                              setSellPrice(h.currentPrice.toString());
+                              setFormError(null);
+                            }}
+                            className={`p-2 rounded-xl border text-left transition cursor-pointer ${
+                              sellCoinId === h.coinId
+                                ? 'bg-emerald-600/25 border-emerald-500 text-white font-bold'
+                                : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-xs text-white">{h.symbol}</span>
+                              <span className="text-[10px] text-emerald-400">${(h.quantity * h.currentPrice).toFixed(1)}</span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 truncate font-mono">Held: {h.quantity}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Active Holding Stats */}
+                    {(() => {
+                      const selectedHolding = holdings.find(h => h.coinId === sellCoinId);
+                      if (!selectedHolding) return null;
+
+                      return (
+                        <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl grid grid-cols-3 gap-2 text-center text-[11px] font-mono">
+                          <div>
+                            <div className="text-slate-400 text-[10px]">Total Held</div>
+                            <div className="text-white font-bold">{selectedHolding.quantity} {selectedHolding.symbol}</div>
+                          </div>
+                          <div>
+                            <div className="text-slate-400 text-[10px]">Buy Avg Price</div>
+                            <div className="text-slate-300 font-bold">${selectedHolding.buyPrice.toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <div className="text-slate-400 text-[10px]">Market Price</div>
+                            <div className="text-emerald-400 font-bold">${selectedHolding.currentPrice.toLocaleString()}</div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Sell Quantity & Quick Percentage Buttons */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-slate-300 font-semibold">Quantity to Sell</label>
+                        {(() => {
+                          const h = holdings.find(item => item.coinId === sellCoinId);
+                          if (!h) return null;
+                          return (
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => setSellQuantity((h.quantity * 0.25).toFixed(4))}
+                                className="px-1.5 py-0.5 text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 rounded cursor-pointer"
+                              >
+                                25%
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setSellQuantity((h.quantity * 0.5).toFixed(4))}
+                                className="px-1.5 py-0.5 text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 rounded cursor-pointer"
+                              >
+                                50%
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setSellQuantity((h.quantity * 0.75).toFixed(4))}
+                                className="px-1.5 py-0.5 text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 rounded cursor-pointer"
+                              >
+                                75%
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setSellQuantity(h.quantity.toString())}
+                                className="px-1.5 py-0.5 text-[10px] bg-emerald-800 hover:bg-emerald-700 text-white font-bold rounded cursor-pointer"
+                              >
+                                100% (All)
+                              </button>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                      <input
+                        type="number"
+                        step="any"
+                        min="0.000001"
+                        required
+                        placeholder="Quantity to sell"
+                        value={sellQuantity}
+                        onChange={(e) => setSellQuantity(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:border-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Sell Price */}
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">
+                        Sale Price ($ USD)
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        min="0.000001"
+                        required
+                        placeholder="Sell price"
+                        value={sellPrice}
+                        onChange={(e) => setSellPrice(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:border-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Realized P&L Preview */}
+                    {(() => {
+                      const h = holdings.find(item => item.coinId === sellCoinId);
+                      const qSell = parseFloat(sellQuantity) || 0;
+                      const sPrice = parseFloat(sellPrice) || 0;
+                      if (!h) return null;
+
+                      const proceeds = qSell * sPrice;
+                      const costBasis = qSell * h.buyPrice;
+                      const realizedPL = proceeds - costBasis;
+                      const realizedPct = costBasis > 0 ? (realizedPL / costBasis) * 100 : 0;
+                      const remaining = Math.max(0, h.quantity - qSell);
+
+                      return (
+                        <div className="p-2.5 bg-slate-950 border border-emerald-900/40 rounded-xl space-y-1 text-[11px] font-mono">
+                          <div className="text-slate-400 flex justify-between">
+                            <span>Cash Proceeds Received:</span>
+                            <span className="text-white font-bold">${proceeds.toFixed(2)}</span>
+                          </div>
+                          <div className="text-slate-400 flex justify-between">
+                            <span>Cost Basis of Sold Amount:</span>
+                            <span className="text-slate-300">${costBasis.toFixed(2)}</span>
+                          </div>
+                          <div className="text-slate-400 flex justify-between">
+                            <span>Realized Profit / Loss:</span>
+                            <span className={`font-bold ${realizedPL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {realizedPL >= 0 ? '+$' : '-$'}{Math.abs(realizedPL).toFixed(2)} ({realizedPct >= 0 ? '+' : ''}{realizedPct.toFixed(2)}%)
+                            </span>
+                          </div>
+                          <div className="text-slate-400 flex justify-between pt-1 border-t border-slate-800 text-[10px]">
+                            <span>Remaining Position:</span>
+                            <span className="text-slate-200">{remaining > 0 ? `${remaining.toFixed(4)} ${h.symbol}` : '0 (Position Closed)'}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </form>
+                )}
+
+                {/* MODE 3: DELETE / MISTAKE */}
+                {modalMode === 'delete' && (
+                  <div className="space-y-3.5">
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1.5">
+                        Select Holding to Remove
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                        {holdings.map(h => (
+                          <button
+                            type="button"
+                            key={h.coinId}
+                            onClick={() => {
+                              setDeleteCoinId(h.coinId);
+                              setFormError(null);
+                            }}
+                            className={`p-2 rounded-xl border text-left transition cursor-pointer ${
+                              deleteCoinId === h.coinId
+                                ? 'bg-rose-600/25 border-rose-500 text-white font-bold'
+                                : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-xs text-white">{h.symbol}</span>
+                              <span className="text-[10px] text-rose-400">${(h.quantity * h.currentPrice).toFixed(1)}</span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 truncate capitalize font-mono">{h.coinId}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {(() => {
+                      const toDelete = holdings.find(h => h.coinId === deleteCoinId);
+                      if (!toDelete) {
+                        return (
+                          <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center text-slate-400">
+                            No coin selected or portfolio is empty.
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="p-3 bg-rose-950/20 border border-rose-800/40 rounded-xl space-y-2">
+                          <div className="flex items-center gap-2 text-rose-300 font-bold">
+                            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                            <span>Remove Accidental Holding ({toDelete.symbol})?</span>
+                          </div>
+                          <p className="text-[11px] text-slate-300">
+                            This will cleanly delete this holding from your portfolio tracker without recording a sell transaction.
+                          </p>
+                          <div className="p-2 bg-slate-950 border border-slate-800 rounded-lg text-[11px] font-mono space-y-1">
+                            <div className="text-slate-400 flex justify-between">
+                              <span>Asset ID:</span>
+                              <span className="text-white capitalize">{toDelete.coinId} ({toDelete.symbol})</span>
+                            </div>
+                            <div className="text-slate-400 flex justify-between">
+                              <span>Recorded Quantity:</span>
+                              <span className="text-white">{toDelete.quantity}</span>
+                            </div>
+                            <div className="text-slate-400 flex justify-between">
+                              <span>Recorded Buy Price:</span>
+                              <span className="text-slate-300">${toDelete.buyPrice.toLocaleString()}</span>
+                            </div>
+                            <div className="text-slate-400 flex justify-between">
+                              <span>Recorded Valuation:</span>
+                              <span className="text-white font-bold">${(toDelete.quantity * toDelete.currentPrice).toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+
+              {/* Sticky Modal Footer */}
+              <div className="p-3 sm:p-4 border-t border-slate-800 bg-slate-900/95 shrink-0 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddCoinOpen(false)}
+                  className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition cursor-pointer text-xs"
+                >
+                  Cancel
+                </button>
+
+                {modalMode === 'add' && (
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition shadow-md shadow-blue-600/30 flex items-center gap-1.5 cursor-pointer"
+                    form="add-coin-form"
+                    className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition shadow-md shadow-blue-600/30 flex items-center gap-1.5 cursor-pointer text-xs"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>Save &amp; Update Dashboard</span>
+                    <span>Save &amp; Add Position</span>
                   </button>
-                </div>
-              </form>
+                )}
+
+                {modalMode === 'sell' && (
+                  <button
+                    type="submit"
+                    form="sell-coin-form"
+                    disabled={holdings.length === 0}
+                    className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition shadow-md shadow-emerald-600/30 flex items-center gap-1.5 cursor-pointer text-xs disabled:opacity-40"
+                  >
+                    <DollarSign className="w-3.5 h-3.5" />
+                    <span>Confirm Sale &amp; Realize P&amp;L</span>
+                  </button>
+                )}
+
+                {modalMode === 'delete' && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteMistake(deleteCoinId)}
+                    disabled={!holdings.some(h => h.coinId === deleteCoinId)}
+                    className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold transition shadow-md shadow-rose-600/30 flex items-center gap-1.5 cursor-pointer text-xs disabled:opacity-40"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Holding (Remove Mistake)</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}

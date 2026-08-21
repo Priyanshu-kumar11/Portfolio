@@ -1,9 +1,17 @@
 /**
- * Custom smooth scrolling utility with easing and header offset handling
+ * Premium custom smooth scrolling utility with quintic easing, velocity scaling,
+ * and header offset compensation for silky-smooth section-to-section navigation.
  */
 import type React from 'react';
 
-export function smoothScrollTo(target: string | HTMLElement, offset: number = 80, duration: number = 700) {
+// Cancelable active scroll animation controller
+let activeScrollAnimationId: number | null = null;
+
+export function smoothScrollTo(
+  target: string | HTMLElement, 
+  offset: number = 75, 
+  baseDuration: number = 850
+) {
   let targetElement: HTMLElement | null = null;
 
   if (typeof target === 'string') {
@@ -15,40 +23,60 @@ export function smoothScrollTo(target: string | HTMLElement, offset: number = 80
 
   if (!targetElement) return;
 
-  const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
-  const startPosition = window.pageYOffset;
+  // Cancel any ongoing scroll animation to prevent conflicting velocity
+  if (activeScrollAnimationId !== null) {
+    cancelAnimationFrame(activeScrollAnimationId);
+    activeScrollAnimationId = null;
+  }
+
+  const startPosition = window.pageYOffset || document.documentElement.scrollTop;
+  const targetPosition = targetElement.getBoundingClientRect().top + startPosition - offset;
   const distance = targetPosition - startPosition;
+
+  // If already at target, return
+  if (Math.abs(distance) < 2) return;
+
+  // Dynamic duration scaling: longer distance gets slightly more duration for cinematic glide
+  const distanceMagnitude = Math.abs(distance);
+  const calculatedDuration = Math.min(
+    1200,
+    Math.max(500, baseDuration + Math.log10(distanceMagnitude + 10) * 80)
+  );
+
   let startTime: number | null = null;
 
-  // Highlight flash on target element
+  // Visual highlight pulse on target section container
   targetElement.classList.add('section-highlight-pulse');
   setTimeout(() => {
     targetElement?.classList.remove('section-highlight-pulse');
-  }, 1800);
+  }, 1600);
 
-  function animation(currentTime: number) {
+  function step(currentTime: number) {
     if (startTime === null) startTime = currentTime;
     const timeElapsed = currentTime - startTime;
-    const progress = Math.min(timeElapsed / duration, 1);
+    const progress = Math.min(timeElapsed / calculatedDuration, 1);
 
-    // Ease in-out cubic
-    const ease = progress < 0.5
-      ? 4 * progress * progress * progress
-      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    // Quintic Ease-Out Curve (ultra smooth deceleration without abrupt stop)
+    // f(t) = 1 - (1 - t)^5
+    const ease = 1 - Math.pow(1 - progress, 5);
 
-    window.scrollTo(0, startPosition + distance * ease);
+    const nextScrollY = startPosition + distance * ease;
+    window.scrollTo(0, nextScrollY);
 
-    if (timeElapsed < duration) {
-      requestAnimationFrame(animation);
+    if (timeElapsed < calculatedDuration) {
+      activeScrollAnimationId = requestAnimationFrame(step);
     } else {
-      // Update hash in URL cleanly without sudden jump
+      window.scrollTo(0, targetPosition);
+      activeScrollAnimationId = null;
+
+      // Update hash in URL cleanly without sudden browser jump
       if (typeof target === 'string' && target.startsWith('#')) {
         history.replaceState(null, '', target);
       }
     }
   }
 
-  requestAnimationFrame(animation);
+  activeScrollAnimationId = requestAnimationFrame(step);
 }
 
 /**
@@ -63,3 +91,4 @@ export function handleAnchorClick(e: React.MouseEvent<HTMLAnchorElement> | Mouse
     smoothScrollTo(href);
   }
 }
+

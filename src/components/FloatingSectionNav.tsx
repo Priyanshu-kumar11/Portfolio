@@ -48,8 +48,8 @@ export const FloatingSectionNav: React.FC = () => {
       setScrollProgress(progress);
       setShowDock(currentScroll > 150);
 
-      // Section intersection detection
-      const scrollPos = window.scrollY + 200;
+      // Section intersection detection with dynamic midpoint tolerance
+      const scrollPos = window.scrollY + window.innerHeight * 0.35;
       for (let i = SECTIONS.length - 1; i >= 0; i--) {
         const sec = SECTIONS[i];
         const el = document.getElementById(sec.id);
@@ -69,11 +69,13 @@ export const FloatingSectionNav: React.FC = () => {
   }, []);
 
   const handleJump = (sectionId: string) => {
-    smoothScrollTo(sectionId, 75, 750);
+    setActiveSection(sectionId);
+    smoothScrollTo(sectionId, 75, 850);
   };
 
   const handleBackToTop = () => {
-    smoothScrollTo('overview', 0, 800);
+    setActiveSection('overview');
+    smoothScrollTo('overview', 0, 900);
   };
 
   if (!showDock) return null;
