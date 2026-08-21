@@ -8,10 +8,14 @@ import {
   CheckCircle2, 
   Sparkles,
   TrendingUp,
-  Database
+  Database,
+  Box
 } from 'lucide-react';
 import { profileData } from '../data/portfolioData';
 import { useTheme } from '../context/ThemeContext';
+import { Card3D } from './Card3D';
+import { ThreeDVisualizer } from './ThreeDVisualizer';
+import { smoothScrollTo } from '../utils/smoothScroll';
 
 interface Props {
   onOpenResume: () => void;
@@ -21,8 +25,14 @@ interface Props {
 
 export const Hero: React.FC<Props> = ({ onOpenResume, roleFilter, setRoleFilter }) => {
   const [activePitch, setActivePitch] = useState<'da' | 'ba' | 'synergy'>('synergy');
+  const [show3DMatrix, setShow3DMatrix] = useState(true);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+
+  const handleSmoothJump = (e: React.MouseEvent<HTMLAnchorElement>, target: string) => {
+    e.preventDefault();
+    smoothScrollTo(target, 75, 750);
+  };
 
   return (
     <section id="overview" className="relative pt-28 pb-16 sm:pt-36 sm:pb-20 overflow-hidden">
@@ -34,7 +44,7 @@ export const Hero: React.FC<Props> = ({ onOpenResume, roleFilter, setRoleFilter 
               ? 'bg-slate-900/90 border-slate-800 text-slate-300' 
               : 'bg-white border-slate-200 text-slate-700'
           }`}>
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className={isDark ? 'text-emerald-400 font-semibold' : 'text-emerald-700 font-semibold'}>
               Associate @ Fusion Business Solution
             </span>
@@ -186,7 +196,8 @@ export const Hero: React.FC<Props> = ({ onOpenResume, roleFilter, setRoleFilter 
             <a
               id="hero-explore-projects-cta"
               href="#projects"
-              className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm shadow-sm active:scale-95 transition flex items-center gap-2"
+              onClick={(e) => handleSmoothJump(e, '#projects')}
+              className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm shadow-sm active:scale-95 transition flex items-center gap-2 cursor-pointer"
             >
               <span>Explore Projects &amp; Live Demos</span>
               <ArrowRight className="w-4 h-4" />
@@ -208,7 +219,8 @@ export const Hero: React.FC<Props> = ({ onOpenResume, roleFilter, setRoleFilter 
             <a
               id="hero-contact-cta"
               href="#contact"
-              className={`px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium border transition ${
+              onClick={(e) => handleSmoothJump(e, '#contact')}
+              className={`px-4 py-2.5 rounded-lg text-xs sm:text-sm font-medium border transition cursor-pointer ${
                 isDark 
                   ? 'bg-slate-900/60 hover:bg-slate-800 text-slate-300 border-slate-800' 
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
@@ -219,65 +231,79 @@ export const Hero: React.FC<Props> = ({ onOpenResume, roleFilter, setRoleFilter 
           </div>
         </div>
 
-        {/* Highlight Executive Metric Cards */}
-        <div className="mt-12 max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className={`p-4 sm:p-5 rounded-xl border transition ${
-            isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
-          }`}>
-            <div className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-sky-400' : 'text-blue-700'}`}>
-              7.69<span className={`text-sm font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>/10 CGPA</span>
-            </div>
-            <div className={`text-xs font-semibold mt-1 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-              B.Tech Computer Science
-            </div>
-            <div className={`text-[11px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              BBDITM Lucknow (2021-2025)
-            </div>
-          </div>
+        {/* 3D Interactive Polyhedron Matrix Stage */}
+        <div className="mt-10 max-w-4xl mx-auto">
+          <ThreeDVisualizer />
+        </div>
 
-          <div className={`p-4 sm:p-5 rounded-xl border transition ${
-            isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
-          }`}>
-            <div className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-              100%
+        {/* Highlight Executive Metric Cards with 3D Physics Tilt */}
+        <div className="mt-10 max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <Card3D intensity={14} depth={15}>
+            <div className={`p-4 sm:p-5 rounded-xl border h-full transition ${
+              isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+            }`}>
+              <div className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-sky-400' : 'text-blue-700'}`}>
+                7.69<span className={`text-sm font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>/10 CGPA</span>
+              </div>
+              <div className={`text-xs font-semibold mt-1 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                B.Tech Computer Science
+              </div>
+              <div className={`text-[11px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                BBDITM Lucknow (2021-2025)
+              </div>
             </div>
-            <div className={`text-xs font-semibold mt-1 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-              UAT &amp; BOT Validation
-            </div>
-            <div className={`text-[11px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Dev &amp; Prod Verification
-            </div>
-          </div>
+          </Card3D>
 
-          <div className={`p-4 sm:p-5 rounded-xl border transition ${
-            isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
-          }`}>
-            <div className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
-              M / Q / Y
+          <Card3D intensity={14} depth={15}>
+            <div className={`p-4 sm:p-5 rounded-xl border h-full transition ${
+              isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+            }`}>
+              <div className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                100%
+              </div>
+              <div className={`text-xs font-semibold mt-1 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                UAT &amp; BOT Validation
+              </div>
+              <div className={`text-[11px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Dev &amp; Prod Verification
+              </div>
             </div>
-            <div className={`text-xs font-semibold mt-1 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-              Business Dashboards
-            </div>
-            <div className={`text-[11px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Monthly, Quarterly &amp; Yearly
-            </div>
-          </div>
+          </Card3D>
 
-          <div className={`p-4 sm:p-5 rounded-xl border transition ${
-            isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
-          }`}>
-            <div className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-              Power BI &amp; SQL
+          <Card3D intensity={14} depth={15}>
+            <div className={`p-4 sm:p-5 rounded-xl border h-full transition ${
+              isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+            }`}>
+              <div className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
+                M / Q / Y
+              </div>
+              <div className={`text-xs font-semibold mt-1 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                Business Dashboards
+              </div>
+              <div className={`text-[11px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Monthly, Quarterly &amp; Yearly
+              </div>
             </div>
-            <div className={`text-xs font-semibold mt-1 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-              DAX, Python, Apps Script
+          </Card3D>
+
+          <Card3D intensity={14} depth={15}>
+            <div className={`p-4 sm:p-5 rounded-xl border h-full transition ${
+              isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+            }`}>
+              <div className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                Power BI &amp; SQL
+              </div>
+              <div className={`text-xs font-semibold mt-1 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                DAX, Python, Apps Script
+              </div>
+              <div className={`text-[11px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Automated Data Pipelines
+              </div>
             </div>
-            <div className={`text-[11px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Automated Data Pipelines
-            </div>
-          </div>
+          </Card3D>
         </div>
       </div>
     </section>
   );
 };
+

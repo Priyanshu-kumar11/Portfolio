@@ -14,6 +14,7 @@ import { Project } from '../types';
 import { CryptoDashboardDemo } from './InteractiveDemos/CryptoDashboardDemo';
 import { HRAttritionDemo } from './InteractiveDemos/HRAttritionDemo';
 import { useTheme } from '../context/ThemeContext';
+import { Card3D } from './Card3D';
 
 interface Props {
   roleFilter: 'all' | 'data-analyst' | 'business-analyst';
@@ -108,184 +109,185 @@ export const ProjectsSection: React.FC<Props> = ({ roleFilter }) => {
         {/* Projects Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {filteredProjects.map((project) => (
-            <div
-              key={project.id}
-              className={`rounded-xl overflow-hidden border shadow-sm flex flex-col justify-between transition group ${
-                isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-300 shadow-sm'
-              }`}
-            >
-              <div>
-                {/* Project Image & Live Badge Banner */}
-                <div className="relative h-52 sm:h-60 overflow-hidden bg-slate-950">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 opacity-70"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
-                  />
+            <Card3D key={project.id} intensity={8} depth={10} className="h-full">
+              <div
+                className={`rounded-xl overflow-hidden border shadow-sm flex flex-col justify-between h-full transition group ${
+                  isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-300 shadow-sm'
+                }`}
+              >
+                <div>
+                  {/* Project Image & Live Badge Banner */}
+                  <div className="relative h-52 sm:h-60 overflow-hidden bg-slate-950">
+                    <img
+                      src={project.image}
+                      alt={project.title}
+                      className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 opacity-70"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
 
-                  <div className={`absolute inset-0 bg-gradient-to-t ${
-                    isDark ? 'from-slate-900 via-slate-900/60' : 'from-slate-950/90 via-slate-950/40'
-                  } to-transparent`} />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${
+                      isDark ? 'from-slate-900 via-slate-900/60' : 'from-slate-950/90 via-slate-950/40'
+                    } to-transparent`} />
 
-                  {/* Category Pill Tag */}
-                  <div className="absolute top-3.5 left-3.5 flex gap-2">
-                    <span className="px-2.5 py-0.5 rounded-md bg-slate-950/90 text-slate-200 text-[11px] font-semibold border border-slate-700">
-                      {project.category.replace('-', ' ').toUpperCase()}
-                    </span>
+                    {/* Category Pill Tag */}
+                    <div className="absolute top-3.5 left-3.5 flex gap-2">
+                      <span className="px-2.5 py-0.5 rounded-md bg-slate-950/90 text-slate-200 text-[11px] font-semibold border border-slate-700">
+                        {project.category.replace('-', ' ').toUpperCase()}
+                      </span>
+                    </div>
+
+                    {/* Live Simulation Action in Image Banner */}
+                    {project.demoType !== 'none' && (
+                      <div className="absolute bottom-3.5 right-3.5">
+                        <button
+                          onClick={() => setActiveDemoProject(project.id)}
+                          className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-white" />
+                          <span>Interactive Demo</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Live Simulation Action in Image Banner */}
-                  {project.demoType !== 'none' && (
-                    <div className="absolute bottom-3.5 right-3.5">
-                      <button
-                        onClick={() => setActiveDemoProject(project.id)}
-                        className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
-                      >
-                        <Play className="w-3.5 h-3.5 fill-white" />
-                        <span>Interactive Demo</span>
-                      </button>
+                  {/* Content Details */}
+                  <div className="p-5 sm:p-6 space-y-3.5">
+                    <div>
+                      <h3 className={`text-xl sm:text-2xl font-bold transition ${
+                        isDark ? 'text-white group-hover:text-sky-400' : 'text-slate-950 group-hover:text-blue-700'
+                      }`}>
+                        {project.title}
+                      </h3>
+                      <p className={`text-xs font-mono mt-0.5 ${
+                        isDark ? 'text-slate-400' : 'text-slate-600'
+                      }`}>
+                        {project.subtitle}
+                      </p>
                     </div>
-                  )}
+
+                    <p className={`text-xs sm:text-sm leading-relaxed ${
+                      isDark ? 'text-slate-300' : 'text-slate-700'
+                    }`}>
+                      {project.description}
+                    </p>
+
+                    {/* Key Highlights from Resume */}
+                    <div className="space-y-1.5 pt-1">
+                      {project.highlights.map((highlight, i) => (
+                        <div key={i} className={`flex items-start gap-2.5 text-xs leading-relaxed ${
+                          isDark ? 'text-slate-300' : 'text-slate-700'
+                        }`}>
+                          <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${
+                            isDark ? 'text-sky-400' : 'text-blue-600'
+                          }`} />
+                          <span>{highlight}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Impact Metrics Box */}
+                    <div className={`grid grid-cols-3 gap-2 py-2.5 rounded-lg border text-center ${
+                      isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-300'
+                    }`}>
+                      {project.impactMetrics.map((metric, i) => (
+                        <div key={i} className="px-1">
+                          <div className={`text-sm sm:text-base font-extrabold ${
+                            isDark ? 'text-sky-400' : 'text-blue-700'
+                          }`}>
+                            {metric.value}
+                          </div>
+                          <div className={`text-[10px] truncate font-medium ${
+                            isDark ? 'text-slate-400' : 'text-slate-600'
+                          }`}>
+                            {metric.label}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Tech Stack Pills */}
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {project.techStack.map((tech, i) => (
+                        <span
+                          key={i}
+                          className={`px-2 py-0.5 rounded text-[11px] font-medium border ${
+                            isDark ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-800 border-slate-300'
+                          }`}
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Content Details */}
-                <div className="p-5 sm:p-6 space-y-3.5">
-                  <div>
-                    <h3 className={`text-xl sm:text-2xl font-bold transition ${
-                      isDark ? 'text-white group-hover:text-sky-400' : 'text-slate-950 group-hover:text-blue-700'
-                    }`}>
-                      {project.title}
-                    </h3>
-                    <p className={`text-xs font-mono mt-0.5 ${
-                      isDark ? 'text-slate-400' : 'text-slate-600'
-                    }`}>
-                      {project.subtitle}
-                    </p>
-                  </div>
-
-                  <p className={`text-xs sm:text-sm leading-relaxed ${
-                    isDark ? 'text-slate-300' : 'text-slate-700'
-                  }`}>
-                    {project.description}
-                  </p>
-
-                  {/* Key Highlights from Resume */}
-                  <div className="space-y-1.5 pt-1">
-                    {project.highlights.map((highlight, i) => (
-                      <div key={i} className={`flex items-start gap-2.5 text-xs leading-relaxed ${
-                        isDark ? 'text-slate-300' : 'text-slate-700'
-                      }`}>
-                        <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${
-                          isDark ? 'text-sky-400' : 'text-blue-600'
-                        }`} />
-                        <span>{highlight}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Impact Metrics Box */}
-                  <div className={`grid grid-cols-3 gap-2 py-2.5 rounded-lg border text-center ${
-                    isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-300'
-                  }`}>
-                    {project.impactMetrics.map((metric, i) => (
-                      <div key={i} className="px-1">
-                        <div className={`text-sm sm:text-base font-extrabold ${
-                          isDark ? 'text-sky-400' : 'text-blue-700'
-                        }`}>
-                          {metric.value}
-                        </div>
-                        <div className={`text-[10px] truncate font-medium ${
-                          isDark ? 'text-slate-400' : 'text-slate-600'
-                        }`}>
-                          {metric.label}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Tech Stack Pills */}
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {project.techStack.map((tech, i) => (
-                      <span
-                        key={i}
-                        className={`px-2 py-0.5 rounded text-[11px] font-medium border ${
-                          isDark ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-800 border-slate-300'
+                {/* Card Footer Actions */}
+                <div className={`p-5 sm:p-6 pt-0 border-t mt-3 flex items-center justify-between gap-3 ${
+                  isDark ? 'border-slate-800' : 'border-slate-200'
+                }`}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {project.liveUrl && project.liveUrl !== '#' && (
+                      <a
+                        href={project.liveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`text-xs font-semibold flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border transition ${
+                          isDark 
+                            ? 'text-emerald-400 bg-emerald-950/40 border-emerald-800 hover:bg-emerald-900/40' 
+                            : 'text-emerald-800 bg-emerald-50 border-emerald-300 hover:bg-emerald-100'
                         }`}
                       >
-                        {tech}
-                      </span>
-                    ))}
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Live Sheet</span>
+                      </a>
+                    )}
+                    {project.codeSnippet && (
+                      <button
+                        onClick={() => setActiveCodeSnippet(project)}
+                        className={`text-xs font-semibold flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border transition cursor-pointer ${
+                          isDark
+                            ? 'text-sky-400 bg-blue-950/40 border-blue-800 hover:bg-blue-900/40'
+                            : 'text-blue-800 bg-blue-50 border-blue-300 hover:bg-blue-100'
+                        }`}
+                      >
+                        <Code className="w-3.5 h-3.5" />
+                        <span>Code</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {project.githubUrl && (
+                      <a
+                        href={project.githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`p-2 rounded-lg border transition ${
+                          isDark ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white' : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-50 shadow-xs'
+                        }`}
+                        title="View GitHub Repository"
+                      >
+                        <Github className="w-4 h-4" />
+                      </a>
+                    )}
+                    {project.demoType !== 'none' && (
+                      <button
+                        onClick={() => setActiveDemoProject(project.id)}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition flex items-center gap-1 cursor-pointer ${
+                          isDark ? 'bg-slate-800 border-slate-700 text-slate-200 hover:text-white' : 'bg-white border-slate-300 text-slate-900 hover:bg-slate-50 shadow-xs'
+                        }`}
+                      >
+                        <span>Simulate</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
-
-              {/* Card Footer Actions */}
-              <div className={`p-5 sm:p-6 pt-0 border-t mt-3 flex items-center justify-between gap-3 ${
-                isDark ? 'border-slate-800' : 'border-slate-200'
-              }`}>
-                <div className="flex flex-wrap items-center gap-2">
-                  {project.liveUrl && project.liveUrl !== '#' && (
-                    <a
-                      href={project.liveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`text-xs font-semibold flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border transition ${
-                        isDark 
-                          ? 'text-emerald-400 bg-emerald-950/40 border-emerald-800 hover:bg-emerald-900/40' 
-                          : 'text-emerald-800 bg-emerald-50 border-emerald-300 hover:bg-emerald-100'
-                      }`}
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>Live Sheet</span>
-                    </a>
-                  )}
-                  {project.codeSnippet && (
-                    <button
-                      onClick={() => setActiveCodeSnippet(project)}
-                      className={`text-xs font-semibold flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border transition cursor-pointer ${
-                        isDark
-                          ? 'text-sky-400 bg-blue-950/40 border-blue-800 hover:bg-blue-900/40'
-                          : 'text-blue-800 bg-blue-50 border-blue-300 hover:bg-blue-100'
-                      }`}
-                    >
-                      <Code className="w-3.5 h-3.5" />
-                      <span>Code</span>
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {project.githubUrl && (
-                    <a
-                      href={project.githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`p-2 rounded-lg border transition ${
-                        isDark ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white' : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-50 shadow-xs'
-                      }`}
-                      title="View GitHub Repository"
-                    >
-                      <Github className="w-4 h-4" />
-                    </a>
-                  )}
-                  {project.demoType !== 'none' && (
-                    <button
-                      onClick={() => setActiveDemoProject(project.id)}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition flex items-center gap-1 cursor-pointer ${
-                        isDark ? 'bg-slate-800 border-slate-700 text-slate-200 hover:text-white' : 'bg-white border-slate-300 text-slate-900 hover:bg-slate-50 shadow-xs'
-                      }`}
-                    >
-                      <span>Simulate</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+            </Card3D>
           ))}
         </div>
 

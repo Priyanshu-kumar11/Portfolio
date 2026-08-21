@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, X, FileText, Sun, Moon, BarChart2, Briefcase, Layers } from 'lucide-react';
 import { profileData } from '../data/portfolioData';
 import { useTheme } from '../context/ThemeContext';
+import { smoothScrollTo } from '../utils/smoothScroll';
 
 interface Props {
   onOpenResume: () => void;
@@ -36,6 +37,11 @@ export const Navbar: React.FC<Props> = ({
     { label: 'Contact', href: '#contact' },
   ];
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    smoothScrollTo(href, 75, 750);
+  };
+
   const isDark = theme === 'dark';
 
   return (
@@ -52,7 +58,11 @@ export const Navbar: React.FC<Props> = ({
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Brand / Logo */}
-        <a href="#overview" className="flex items-center gap-3 group">
+        <a 
+          href="#overview" 
+          onClick={(e) => handleNavClick(e, '#overview')}
+          className="flex items-center gap-3 group"
+        >
           <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm transition ${
             isDark 
               ? 'bg-slate-900 border border-slate-700 text-sky-400 group-hover:border-sky-500' 
@@ -130,7 +140,8 @@ export const Navbar: React.FC<Props> = ({
             <a
               key={link.href}
               href={link.href}
-              className={`transition ${isDark ? 'hover:text-sky-400' : 'hover:text-blue-600'}`}
+              onClick={(e) => handleNavClick(e, link.href)}
+              className={`transition cursor-pointer ${isDark ? 'hover:text-sky-400' : 'hover:text-blue-600'}`}
             >
               {link.label}
             </a>
@@ -166,7 +177,8 @@ export const Navbar: React.FC<Props> = ({
 
           <a
             href="#contact"
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            onClick={(e) => handleNavClick(e, '#contact')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
               isDark
                 ? 'bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700'
                 : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 shadow-xs'
@@ -284,7 +296,10 @@ export const Navbar: React.FC<Props> = ({
               <a
                 key={link.href}
                 href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => {
+                  handleNavClick(e, link.href);
+                  setMobileMenuOpen(false);
+                }}
                 className={`p-2 rounded-lg transition ${
                   isDark ? 'bg-slate-900/60 border border-slate-800 text-slate-300 hover:text-sky-400' : 'bg-slate-50 border border-slate-200 text-slate-700 hover:text-blue-600'
                 }`}
@@ -300,7 +315,7 @@ export const Navbar: React.FC<Props> = ({
                 onOpenResume();
                 setMobileMenuOpen(false);
               }}
-              className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm"
+              className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer"
             >
               <FileText className="w-4 h-4" />
               View Formatted Resume

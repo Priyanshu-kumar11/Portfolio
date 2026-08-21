@@ -18,6 +18,8 @@ import { EducationSection } from './components/EducationSection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 import { InteractiveResumeModal } from './components/InteractiveResumeModal';
+import { FloatingSectionNav } from './components/FloatingSectionNav';
+import { SectionReveal } from './components/SectionReveal';
 
 function AppContent() {
   const [isResumeOpen, setIsResumeOpen] = useState(false);
@@ -37,6 +39,9 @@ function AppContent() {
       {/* Scroll indicator bar */}
       <ScrollProgressBar />
 
+      {/* 3D Floating Section Navigator Dock */}
+      <FloatingSectionNav />
+
       {/* Main sticky navigation */}
       <Navbar
         onOpenResume={() => setIsResumeOpen(true)}
@@ -44,7 +49,7 @@ function AppContent() {
         setRoleFilter={setRoleFilter}
       />
 
-      {/* Main content sections */}
+      {/* Main content sections with smooth 3D scroll reveal transitions */}
       <main className="flex-1 relative z-10">
         <Hero
           onOpenResume={() => setIsResumeOpen(true)}
@@ -52,19 +57,33 @@ function AppContent() {
           setRoleFilter={setRoleFilter}
         />
         
-        <DualRoleBridge />
+        <SectionReveal delay={0.05} perspective3D>
+          <DualRoleBridge />
+        </SectionReveal>
         
-        <ExperienceSection />
+        <SectionReveal delay={0.05} perspective3D>
+          <ExperienceSection />
+        </SectionReveal>
         
-        <ProjectsSection roleFilter={roleFilter} />
+        <SectionReveal delay={0.05} perspective3D>
+          <ProjectsSection roleFilter={roleFilter} />
+        </SectionReveal>
         
-        <InteractiveDemosSection />
+        <SectionReveal delay={0.05} perspective3D>
+          <InteractiveDemosSection />
+        </SectionReveal>
         
-        <SkillsSection roleFilter={roleFilter} />
+        <SectionReveal delay={0.05} perspective3D>
+          <SkillsSection roleFilter={roleFilter} />
+        </SectionReveal>
         
-        <EducationSection />
+        <SectionReveal delay={0.05} perspective3D>
+          <EducationSection />
+        </SectionReveal>
         
-        <ContactSection />
+        <SectionReveal delay={0.05} perspective3D>
+          <ContactSection />
+        </SectionReveal>
       </main>
 
       {/* Footer */}
@@ -90,3 +109,4 @@ export default function App() {
     </ThemeProvider>
   );
 }
+

@@ -12,15 +12,22 @@ import {
   DollarSign, 
   FileSpreadsheet, 
   Sliders, 
-  Plus,
-  Trash2,
-  Edit3,
-  RotateCcw,
-  X,
-  PieChart,
-  BarChart3,
-  AlertCircle,
-  ChevronRight
+  Plus, 
+  Trash2, 
+  Edit3, 
+  RotateCcw, 
+  X, 
+  PieChart, 
+  BarChart3, 
+  AlertCircle, 
+  ChevronRight,
+  LineChart,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  Maximize2,
+  Minimize2,
+  Info
 } from 'lucide-react';
 
 export interface CoinHolding {
@@ -81,11 +88,15 @@ const initialHistoryRows = [
 export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
   const [activeSheetTab, setActiveSheetTab] = useState<'Dashboard' | 'Portfolio' | 'Live Prices' | 'History'>('Dashboard');
   const [viewMode, setViewMode] = useState<'sheets' | 'code'>('sheets');
+  const [dashboardVisualFilter, setDashboardVisualFilter] = useState<'all' | 'charts' | 'trend' | 'table'>('all');
+  
   const [holdings, setHoldings] = useState<CoinHolding[]>(initialPortfolio);
   const [historyRows, setHistoryRows] = useState(initialHistoryRows);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshedTime, setLastRefreshedTime] = useState('Fri Aug 21 2026 05:14:13 GMT+0530 (India Standard Time)');
   const [selectedCell, setSelectedCell] = useState<string>('Dashboard!B5');
+  const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
+  const [selectedTimeframe, setSelectedTimeframe] = useState<'24H' | '7D' | '30D' | 'ALL'>('24H');
 
   // Modal / Form state for Adding / Customizing Coins
   const [isAddCoinOpen, setIsAddCoinOpen] = useState(false);
@@ -280,29 +291,29 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
   // Color generator for dynamic coins
   const getCoinColor = (coinId: string, index: number) => {
     const palette = [
-      '#ea4335', // Red (BTC)
-      '#34a853', // Green (ETH)
-      '#00acc1', // Cyan (SOL)
-      '#fb8c00', // Orange (XRP)
-      '#fbc02d', // Yellow (DOGE)
-      '#8e24aa', // Purple (ADA)
-      '#e91e63', // Pink (DOT)
-      '#00897b', // Teal (LINK)
-      '#3949ab', // Indigo (MATIC)
-      '#d81b60', // Rose (AVAX)
-      '#039be5', // Sky (BNB)
+      '#f59e0b', // Amber (BTC)
+      '#3b82f6', // Blue (ETH)
+      '#14b8a6', // Teal (SOL)
+      '#ec4899', // Pink (XRP)
+      '#eab308', // Yellow (DOGE)
+      '#8b5cf6', // Violet (ADA)
+      '#06b6d4', // Cyan (DOT)
+      '#10b981', // Emerald (LINK)
+      '#6366f1', // Indigo (POL)
+      '#f43f5e', // Rose (AVAX)
+      '#0ea5e9', // Sky (BNB)
     ];
-    if (coinId === 'bitcoin') return '#ea4335';
-    if (coinId === 'ethereum') return '#34a853';
-    if (coinId === 'solana') return '#00acc1';
-    if (coinId === 'ripple') return '#fb8c00';
-    if (coinId === 'dogecoin') return '#fbc02d';
-    if (coinId === 'cardano') return '#8e24aa';
-    if (coinId === 'polkadot') return '#e91e63';
-    if (coinId === 'chainlink') return '#00897b';
-    if (coinId === 'polygon') return '#3949ab';
-    if (coinId === 'avalanche') return '#d81b60';
-    if (coinId === 'binancecoin') return '#039be5';
+    if (coinId === 'bitcoin') return '#f59e0b';
+    if (coinId === 'ethereum') return '#3b82f6';
+    if (coinId === 'solana') return '#14b8a6';
+    if (coinId === 'ripple') return '#ec4899';
+    if (coinId === 'dogecoin') return '#eab308';
+    if (coinId === 'cardano') return '#8b5cf6';
+    if (coinId === 'polkadot') return '#06b6d4';
+    if (coinId === 'chainlink') return '#10b981';
+    if (coinId === 'polygon') return '#6366f1';
+    if (coinId === 'avalanche') return '#f43f5e';
+    if (coinId === 'binancecoin') return '#0ea5e9';
 
     return palette[index % palette.length];
   };
@@ -342,6 +353,67 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
     }, 700);
   };
 
+  // Generate historical timeline data points based on portfolio total
+  const timelinePoints = [
+    { label: '00:00', value: totalPortfolioValue * 0.94, change: '+1.2%' },
+    { label: '04:00', value: totalPortfolioValue * 0.965, change: '+2.8%' },
+    { label: '08:00', value: totalPortfolioValue * 0.95, change: '+1.9%' },
+    { label: '12:00', value: totalPortfolioValue * 0.98, change: '+4.5%' },
+    { label: '16:00', value: totalPortfolioValue * 0.992, change: '+5.7%' },
+    { label: '20:00', value: totalPortfolioValue * 0.978, change: '+4.1%' },
+    { label: 'Now', value: totalPortfolioValue, change: `${overallReturnPct >= 0 ? '+' : ''}${overallReturnPct.toFixed(1)}%` },
+  ];
+
+  // Compute SVG Donut Chart Paths
+  let cumulativeAngle = 0;
+  const donutSlices = calculatedRows.map((row, idx) => {
+    const pct = totalPortfolioValue > 0 ? row.currentValue / totalPortfolioValue : 0;
+    const angle = pct * 360;
+    const startAngle = cumulativeAngle;
+    const endAngle = cumulativeAngle + angle;
+    cumulativeAngle += angle;
+
+    // Convert polar to cartesian
+    const radius = 80;
+    const innerRadius = 52;
+    const cx = 100;
+    const cy = 100;
+
+    const startRad = (startAngle - 90) * (Math.PI / 180);
+    const endRad = (endAngle - 90) * (Math.PI / 180);
+
+    const x1 = cx + radius * Math.cos(startRad);
+    const y1 = cy + radius * Math.sin(startRad);
+    const x2 = cx + radius * Math.cos(endRad);
+    const y2 = cy + radius * Math.sin(endRad);
+
+    const x3 = cx + innerRadius * Math.cos(endRad);
+    const y3 = cy + innerRadius * Math.sin(endRad);
+    const x4 = cx + innerRadius * Math.cos(startRad);
+    const y4 = cy + innerRadius * Math.sin(startRad);
+
+    const largeArc = angle > 180 ? 1 : 0;
+
+    const pathData = totalPortfolioValue > 0 && angle > 0 ? (
+      angle >= 359.9 ? (
+        `M ${cx} ${cy - radius} A ${radius} ${radius} 0 1 1 ${cx - 0.01} ${cy - radius} L ${cx - 0.01} ${cy - innerRadius} A ${innerRadius} ${innerRadius} 0 1 0 ${cx} ${cy - innerRadius} Z`
+      ) : (
+        `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`
+      )
+    ) : '';
+
+    return {
+      coinId: row.coinId,
+      symbol: row.symbol,
+      pct: pct * 100,
+      value: row.currentValue,
+      color: getCoinColor(row.coinId, idx),
+      pathData,
+      startAngle,
+      endAngle
+    };
+  });
+
   return (
     <div className="bg-slate-900 border border-slate-700/90 rounded-2xl overflow-hidden shadow-2xl text-slate-100 flex flex-col max-h-[88vh] w-full">
       {/* Top Google Sheets Style Header */}
@@ -359,7 +431,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-sky-300 border border-sky-500/30 font-semibold flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
-                <span>Custom Coins Interactive</span>
+                <span>Charts &amp; Visual Analytics</span>
               </span>
             </div>
             <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-0.5">
@@ -367,6 +439,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
               <span>Edit</span>
               <span>View</span>
               <span>Insert</span>
+              <span className="text-emerald-400 font-semibold">Charts &amp; Visuals</span>
               <span>Format</span>
               <span>Data</span>
               <span>Tools</span>
@@ -440,7 +513,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
         </div>
       </div>
 
-      {/* Interactive Quick Add / Status Banner */}
+      {/* Interactive Quick Add / Formula Banner */}
       <div className="bg-slate-950/90 px-4 py-2 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2 text-slate-400 font-mono">
           <div className="text-slate-400 font-bold px-2 py-0.5 bg-slate-900 border border-slate-800 rounded">
@@ -448,7 +521,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
           </div>
           <span className="text-slate-500 font-serif italic text-sm">fx</span>
           <div className="text-cyan-300 truncate max-w-md">
-            {activeSheetTab === 'Dashboard' && `=SUM(Portfolio!F2:F${holdings.length + 1}) [Dynamic Sum of ${holdings.length} Active Positions]`}
+            {activeSheetTab === 'Dashboard' && `=SPARKLINE(History!B2:B30, {"charttype","column"; "color","cyan"}) [Live BI Visuals]`}
             {activeSheetTab === 'Portfolio' && '=C2*E2 [Current Value = Quantity * Current Price]'}
             {activeSheetTab === 'Live Prices' && '=fetchLiveCryptoPrices("coingecko_v3")'}
             {activeSheetTab === 'History' && '=HistoricalLogAppender() [Time-driven Trigger]'}
@@ -458,7 +531,7 @@ export const CryptoDashboardDemo: React.FC<{ onClose?: () => void }> = ({ onClos
         {/* Quick presets pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
           <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">Quick Add:</span>
-          {PRESET_COINS.filter(p => !holdings.some(h => h.coinId === p.coinId)).slice(0, 3).map(preset => (
+          {PRESET_COINS.filter(p => !holdings.some(h => h.coinId === p.coinId)).slice(0, 4).map(preset => (
             <button
               key={preset.coinId}
               onClick={() => {
@@ -559,48 +632,85 @@ function updateLivePricesAndPortfolio() {
             {/* TAB 1: DASHBOARD */}
             {activeSheetTab === 'Dashboard' && (
               <div className="space-y-6 max-w-6xl mx-auto">
-                {/* Title Banner */}
+                {/* Title & View Selector Banner */}
                 <div className="bg-[#102236] border border-cyan-900/60 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-white tracking-wide flex items-center gap-2">
-                      <span>Crypto Portfolio Dashboard</span>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-xl sm:text-2xl font-bold text-white tracking-wide">
+                        Crypto Portfolio Analytics Dashboard
+                      </h2>
                       <span className="text-xs font-mono font-normal px-2.5 py-0.5 bg-blue-900/50 text-sky-300 border border-blue-700/60 rounded-full">
-                        {holdings.length} Coins Active
+                        {holdings.length} Active Coins
                       </span>
-                    </h2>
-                    <p className="text-[11px] text-slate-400 mt-1 font-mono">
-                      Last Updated: {lastRefreshedTime}
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-1 font-mono flex items-center gap-2">
+                      <span>Last Updated: {lastRefreshedTime.slice(0, 24)}</span>
+                      <span className="text-emerald-400 font-semibold">• Live CoinGecko Feed</span>
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  {/* Dashboard Visual View Filter */}
+                  <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs">
                     <button
-                      onClick={() => {
-                        handleSelectPreset('cardano');
-                        setIsAddCoinOpen(true);
-                      }}
-                      className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition shadow-md flex items-center gap-1.5 cursor-pointer"
+                      onClick={() => setDashboardVisualFilter('all')}
+                      className={`px-3 py-1 rounded-lg font-medium transition cursor-pointer ${
+                        dashboardVisualFilter === 'all'
+                          ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
                     >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add / Buy Coin</span>
+                      All Visuals
+                    </button>
+                    <button
+                      onClick={() => setDashboardVisualFilter('charts')}
+                      className={`px-3 py-1 rounded-lg font-medium transition cursor-pointer ${
+                        dashboardVisualFilter === 'charts'
+                          ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Charts &amp; Donut
+                    </button>
+                    <button
+                      onClick={() => setDashboardVisualFilter('trend')}
+                      className={`px-3 py-1 rounded-lg font-medium transition cursor-pointer ${
+                        dashboardVisualFilter === 'trend'
+                          ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Trend &amp; History
+                    </button>
+                    <button
+                      onClick={() => setDashboardVisualFilter('table')}
+                      className={`px-3 py-1 rounded-lg font-medium transition cursor-pointer ${
+                        dashboardVisualFilter === 'table'
+                          ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Holdings Table
                     </button>
                   </div>
                 </div>
 
                 {/* KPI Metrics Row */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-950/80 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center hover:border-slate-700 transition">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-950/80 py-1 px-3 rounded-lg flex items-center justify-center gap-1.5">
                       <DollarSign className="w-3.5 h-3.5 text-sky-400" />
                       <span>Total Portfolio Value</span>
                     </div>
-                    <div className="text-2xl sm:text-3xl font-extrabold text-white mt-3 font-display">
+                    <div className="text-2xl sm:text-3xl font-extrabold text-white mt-2.5 font-display">
                       ${totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-1">
+                      Across {calculatedRows.length} assets
                     </div>
                   </div>
 
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-950/80 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5">
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center hover:border-slate-700 transition">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-950/80 py-1 px-3 rounded-lg flex items-center justify-center gap-1.5">
                       {totalProfitLoss >= 0 ? (
                         <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
                       ) : (
@@ -608,256 +718,482 @@ function updateLivePricesAndPortfolio() {
                       )}
                       <span>Total Profit / Loss</span>
                     </div>
-                    <div className={`text-2xl sm:text-3xl font-extrabold mt-3 font-display ${totalProfitLoss >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <div className={`text-2xl sm:text-3xl font-extrabold mt-2.5 font-display ${totalProfitLoss >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {totalProfitLoss >= 0 ? '+$' : '-$'}{Math.abs(totalProfitLoss).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
+                    <div className={`text-[11px] font-semibold mt-1 ${overallReturnPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {overallReturnPct >= 0 ? '+' : ''}{overallReturnPct.toFixed(2)}% ROI
+                    </div>
                   </div>
 
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-950/80 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5">
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center hover:border-slate-700 transition">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-950/80 py-1 px-3 rounded-lg flex items-center justify-center gap-1.5">
                       <BarChart3 className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>Overall Return %</span>
+                      <span>Total Invested Cost</span>
                     </div>
-                    <div className={`text-2xl sm:text-3xl font-extrabold mt-3 font-display ${overallReturnPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {overallReturnPct >= 0 ? '+' : ''}{overallReturnPct.toFixed(2)}%
-                    </div>
-                  </div>
-                </div>
-
-                {/* Secondary KPI Row */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-center">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-950/80 py-1 px-3 rounded-lg">
-                      Best Performing Coin
-                    </div>
-                    <div className="text-lg font-bold text-emerald-400 mt-2 capitalize flex items-center justify-center gap-1">
-                      <span>{bestCoin}</span>
-                      {calculatedRows.length > 0 && (
-                        <span className="text-xs font-mono font-normal">
-                          (+{sortedByReturn[0]?.returnPct.toFixed(1)}%)
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-center">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-950/80 py-1 px-3 rounded-lg">
-                      Worst Performing Coin
-                    </div>
-                    <div className="text-lg font-bold text-rose-400 mt-2 capitalize flex items-center justify-center gap-1">
-                      <span>{worstCoin}</span>
-                      {calculatedRows.length > 0 && (
-                        <span className="text-xs font-mono font-normal">
-                          ({sortedByReturn[sortedByReturn.length - 1]?.returnPct.toFixed(1)}%)
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-center">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-950/80 py-1 px-3 rounded-lg">
-                      Total Cost / Investment
-                    </div>
-                    <div className="text-lg font-bold text-slate-200 mt-2">
+                    <div className="text-2xl sm:text-3xl font-extrabold text-slate-200 mt-2.5 font-display">
                       ${totalInvestment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
+                    <div className="text-[11px] text-slate-400 mt-1">
+                      Weighted Acquisition Basis
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center hover:border-slate-700 transition">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-950/80 py-1 px-3 rounded-lg flex items-center justify-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Top Performer</span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold text-emerald-400 mt-2.5 capitalize flex items-center justify-center gap-1">
+                      <span>{bestCoin}</span>
+                    </div>
+                    <div className="text-[11px] font-mono text-emerald-300 mt-1">
+                      +{sortedByReturn[0]?.returnPct.toFixed(1) || 0}% Gain
+                    </div>
                   </div>
                 </div>
 
-                {/* Table and Charts Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                  {/* Left Column: Summary Table & P&L Bar Chart */}
-                  <div className="lg:col-span-6 space-y-6">
-                    {/* Summary Table */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-                      <div className="p-3 bg-[#102236] border-b border-slate-800 flex items-center justify-between">
-                        <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <Layers className="w-3.5 h-3.5 text-sky-400" />
-                          <span>Holdings Summary ({calculatedRows.length} positions)</span>
+                {/* PRIMARY CHARTS GRID (Row 1: Interactive Donut Allocation + Cost vs Value Clustered Bars) */}
+                {(dashboardVisualFilter === 'all' || dashboardVisualFilter === 'charts') && (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* CHART 1: Interactive SVG Donut / Pie Allocation */}
+                    <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between shadow-md">
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <PieChart className="w-4 h-4 text-cyan-400" />
+                          <h4 className="font-bold text-white text-sm">
+                            Asset Allocation (Portfolio Weight %)
+                          </h4>
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 font-mono">
+                          Interactive Donut Chart
                         </span>
+                      </div>
+
+                      {/* Donut Chart Visual */}
+                      <div className="py-4 flex flex-col sm:flex-row items-center justify-around gap-6">
+                        {/* SVG Donut Graphic */}
+                        <div className="relative w-48 h-48 flex items-center justify-center shrink-0">
+                          <svg viewBox="0 0 200 200" className="w-full h-full transform -rotate-90">
+                            {donutSlices.map((slice) => {
+                              const isHovered = hoveredSlice === slice.coinId;
+                              return (
+                                <path
+                                  key={slice.coinId}
+                                  d={slice.pathData}
+                                  fill={slice.color}
+                                  className="transition-all duration-300 cursor-pointer hover:opacity-90"
+                                  style={{
+                                    transformOrigin: '100px 100px',
+                                    transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                                    filter: isHovered ? 'drop-shadow(0 0 8px rgba(255,255,255,0.4))' : 'none'
+                                  }}
+                                  onMouseEnter={() => setHoveredSlice(slice.coinId)}
+                                  onMouseLeave={() => setHoveredSlice(null)}
+                                />
+                              );
+                            })}
+                          </svg>
+
+                          {/* Center KPI Content */}
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                            {hoveredSlice ? (
+                              (() => {
+                                const activeCoin = calculatedRows.find(c => c.coinId === hoveredSlice);
+                                const slice = donutSlices.find(s => s.coinId === hoveredSlice);
+                                return (
+                                  <div>
+                                    <div className="text-[10px] text-slate-400 uppercase font-mono">{activeCoin?.symbol}</div>
+                                    <div className="text-sm font-bold text-white">${activeCoin?.currentValue.toFixed(0)}</div>
+                                    <div className="text-[11px] font-bold text-cyan-400">{slice?.pct.toFixed(1)}%</div>
+                                  </div>
+                                );
+                              })()
+                            ) : (
+                              <div>
+                                <div className="text-[10px] text-slate-400 font-mono uppercase">Portfolio</div>
+                                <div className="text-sm font-extrabold text-white">
+                                  ${totalPortfolioValue >= 1000 ? `${(totalPortfolioValue / 1000).toFixed(1)}k` : totalPortfolioValue.toFixed(0)}
+                                </div>
+                                <div className="text-[9px] text-emerald-400 font-semibold">{calculatedRows.length} Assets</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Donut Legend */}
+                        <div className="space-y-1.5 w-full sm:max-w-xs max-h-52 overflow-y-auto pr-1">
+                          {donutSlices.map((slice) => {
+                            const isHovered = hoveredSlice === slice.coinId;
+                            return (
+                              <div
+                                key={slice.coinId}
+                                onMouseEnter={() => setHoveredSlice(slice.coinId)}
+                                onMouseLeave={() => setHoveredSlice(null)}
+                                className={`flex items-center justify-between p-1.5 rounded-lg text-xs transition cursor-pointer ${
+                                  isHovered ? 'bg-slate-800 border border-slate-700' : 'bg-slate-950/60 hover:bg-slate-800/40'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 truncate">
+                                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: slice.color }} />
+                                  <span className="capitalize font-medium text-slate-200 truncate">{slice.coinId}</span>
+                                  <span className="text-[10px] text-slate-400 font-mono">({slice.symbol})</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-slate-300 font-semibold">${slice.value.toFixed(0)}</span>
+                                  <span className="font-mono text-cyan-400 font-bold w-12 text-right">{slice.pct.toFixed(1)}%</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                        <span>Formula: =F2/SUM(F2:F{holdings.length + 1})</span>
+                        <span className="text-emerald-400">100% Normalized</span>
+                      </div>
+                    </div>
+
+                    {/* CHART 2: Invested Cost vs Current Market Value (Clustered Dual Column Chart) */}
+                    <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between shadow-md">
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="w-4 h-4 text-emerald-400" />
+                          <h4 className="font-bold text-white text-sm">
+                            Cost Basis vs. Current Valuation ($ USD)
+                          </h4>
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] font-mono">
+                          <span className="flex items-center gap-1 text-slate-400">
+                            <span className="w-2.5 h-2.5 rounded bg-slate-600 inline-block" />
+                            <span>Total Cost</span>
+                          </span>
+                          <span className="flex items-center gap-1 text-emerald-400">
+                            <span className="w-2.5 h-2.5 rounded bg-emerald-500 inline-block" />
+                            <span>Current Value</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Visual Bar Comparison */}
+                      <div className="py-4 space-y-3.5 max-h-64 overflow-y-auto">
+                        {calculatedRows.length === 0 ? (
+                          <div className="py-8 text-center text-xs text-slate-500">No coins in portfolio</div>
+                        ) : (
+                          calculatedRows.map((row) => {
+                            const maxVal = Math.max(...calculatedRows.map(r => Math.max(r.currentValue, r.totalCost)), 100);
+                            const costWidth = Math.max(4, (row.totalCost / maxVal) * 100);
+                            const valueWidth = Math.max(4, (row.currentValue / maxVal) * 100);
+                            const isProfit = row.profitLoss >= 0;
+
+                            return (
+                              <div key={row.coinId} className="space-y-1 text-xs">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-white capitalize">{row.coinId}</span>
+                                    <span className="text-[10px] text-slate-400 font-mono">{row.symbol}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 font-mono text-[11px]">
+                                    <span className="text-slate-400">Cost: ${row.totalCost.toFixed(1)}</span>
+                                    <span className="text-white font-bold">Val: ${row.currentValue.toFixed(1)}</span>
+                                    <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${isProfit ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                                      {isProfit ? '+' : ''}{row.returnPct.toFixed(1)}%
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Dual Bars */}
+                                <div className="space-y-1">
+                                  {/* Cost Bar */}
+                                  <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden flex items-center">
+                                    <div 
+                                      className="h-full bg-slate-600 rounded-full transition-all duration-500" 
+                                      style={{ width: `${costWidth}%` }}
+                                      title={`Invested Cost: $${row.totalCost.toFixed(2)}`}
+                                    />
+                                  </div>
+                                  {/* Current Value Bar */}
+                                  <div className="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden flex items-center">
+                                    <div 
+                                      className={`h-full rounded-full transition-all duration-500 ${isProfit ? 'bg-emerald-500' : 'bg-rose-500'}`} 
+                                      style={{ width: `${valueWidth}%` }}
+                                      title={`Current Value: $${row.currentValue.toFixed(2)}`}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                        <span>Spreadsheet Visual: Clustered Columns</span>
+                        <span className="text-cyan-400">Auto-scaled Max Basis</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ROW 2: HISTORICAL TREND AREA CHART & PROFIT/LOSS WATERFALL */}
+                {(dashboardVisualFilter === 'all' || dashboardVisualFilter === 'trend') && (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* CHART 3: Cumulative Portfolio Historical Area/Line Chart */}
+                    <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-md flex flex-col justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <LineChart className="w-4 h-4 text-cyan-400" />
+                          <h4 className="font-bold text-white text-sm">
+                            Portfolio Valuation Trajectory &amp; Growth Curve
+                          </h4>
+                        </div>
+                        <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-[10px] font-mono">
+                          {(['24H', '7D', '30D', 'ALL'] as const).map((tf) => (
+                            <button
+                              key={tf}
+                              onClick={() => setSelectedTimeframe(tf)}
+                              className={`px-2 py-0.5 rounded transition cursor-pointer ${
+                                selectedTimeframe === tf ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                              }`}
+                            >
+                              {tf}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* SVG Area Chart */}
+                      <div className="py-4">
+                        <div className="relative h-44 w-full">
+                          <svg viewBox="0 0 500 160" className="w-full h-full overflow-visible">
+                            <defs>
+                              <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.4" />
+                                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.0" />
+                              </linearGradient>
+                            </defs>
+
+                            {/* Background Grid Lines */}
+                            <line x1="0" y1="30" x2="500" y2="30" stroke="#334155" strokeDasharray="3 3" strokeWidth="0.8" />
+                            <line x1="0" y1="75" x2="500" y2="75" stroke="#334155" strokeDasharray="3 3" strokeWidth="0.8" />
+                            <line x1="0" y1="120" x2="500" y2="120" stroke="#334155" strokeDasharray="3 3" strokeWidth="0.8" />
+
+                            {/* Area Fill */}
+                            {(() => {
+                              const minV = Math.min(...timelinePoints.map(p => p.value)) * 0.98;
+                              const maxV = Math.max(...timelinePoints.map(p => p.value)) * 1.02;
+                              const pointsStr = timelinePoints.map((p, i) => {
+                                const x = (i / (timelinePoints.length - 1)) * 500;
+                                const y = 140 - ((p.value - minV) / (maxV - minV || 1)) * 110;
+                                return `${x},${y}`;
+                              }).join(' ');
+
+                              const areaPath = `M 0,140 L ${pointsStr} L 500,140 Z`;
+                              const linePath = `M ${pointsStr}`;
+
+                              return (
+                                <>
+                                  <path d={areaPath} fill="url(#areaGradient)" />
+                                  <path d={linePath} fill="none" stroke="#06b6d4" strokeWidth="2.5" />
+
+                                  {/* Data Points */}
+                                  {timelinePoints.map((p, i) => {
+                                    const x = (i / (timelinePoints.length - 1)) * 500;
+                                    const y = 140 - ((p.value - minV) / (maxV - minV || 1)) * 110;
+                                    return (
+                                      <g key={i} className="cursor-pointer group">
+                                        <circle cx={x} cy={y} r="4" fill="#06b6d4" stroke="#0f172a" strokeWidth="2" />
+                                        <circle cx={x} cy={y} r="7" fill="#06b6d4" opacity="0.3" className="group-hover:opacity-80 transition" />
+                                      </g>
+                                    );
+                                  })}
+                                </>
+                              );
+                            })()}
+                          </svg>
+
+                          {/* Time Labels on X-axis */}
+                          <div className="flex justify-between text-[10px] text-slate-400 font-mono mt-2">
+                            {timelinePoints.map((p, i) => (
+                              <span key={i}>{p.label}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                        <span className="flex items-center gap-1.5 text-cyan-300">
+                          <Activity className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>Logged snapshots from History tab ({historyRows.length} points)</span>
+                        </span>
+                        <span className="text-emerald-400 font-bold">Current: ${totalPortfolioValue.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    {/* CHART 4: Net Profit & Loss Waterfall / Diverging Bar Chart */}
+                    <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-md flex flex-col justify-between">
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4 text-emerald-400" />
+                          <h4 className="font-bold text-white text-sm">
+                            Profit &amp; Loss Performance ($)
+                          </h4>
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 border border-emerald-800 text-emerald-300 font-mono">
+                          Zero-Axis Diverging
+                        </span>
+                      </div>
+
+                      {/* Diverging Bar Chart */}
+                      <div className="py-3 space-y-3 max-h-56 overflow-y-auto">
+                        {calculatedRows.map((row) => {
+                          const isProfit = row.profitLoss >= 0;
+                          const maxAbs = Math.max(...calculatedRows.map(r => Math.abs(r.profitLoss)), 10);
+                          const widthPct = Math.min(100, (Math.abs(row.profitLoss) / maxAbs) * 100);
+
+                          return (
+                            <div key={row.coinId} className="space-y-1 text-xs">
+                              <div className="flex justify-between font-mono">
+                                <span className="capitalize text-slate-200 font-semibold">{row.coinId} ({row.symbol})</span>
+                                <span className={isProfit ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                                  {isProfit ? '+$' : '-$'}{Math.abs(row.profitLoss).toFixed(2)} ({row.returnPct.toFixed(1)}%)
+                                </span>
+                              </div>
+                              
+                              {/* Horizontal Bar with center line */}
+                              <div className="w-full bg-slate-950 h-3 rounded-full flex items-center p-0.5 relative border border-slate-800">
+                                <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-700 z-10" />
+                                
+                                {isProfit ? (
+                                  <div className="w-1/2 flex justify-start ml-auto">
+                                    <div
+                                      className="h-2 rounded-r-full bg-emerald-500 transition-all duration-500"
+                                      style={{ width: `${Math.max(6, widthPct)}%` }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="w-1/2 flex justify-end mr-auto">
+                                    <div
+                                      className="h-2 rounded-l-full bg-rose-500 transition-all duration-500"
+                                      style={{ width: `${Math.max(6, widthPct)}%` }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                        <span className="text-rose-400">◄ Loss Area</span>
+                        <span className="text-slate-500">0 USD Baseline</span>
+                        <span className="text-emerald-400">Profit Area ►</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ROW 3: SUMMARY HOLDINGS TABLE */}
+                {(dashboardVisualFilter === 'all' || dashboardVisualFilter === 'table') && (
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-md">
+                    <div className="p-3.5 bg-[#102236] border-b border-slate-800 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-sky-400" />
+                        <span className="text-xs sm:text-sm font-bold text-white">
+                          Live Portfolio Holdings &amp; Formulas Grid ({calculatedRows.length} positions)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => {
                             setActiveSheetTab('Portfolio');
                             setSelectedCell('Portfolio!A1');
                           }}
-                          className="text-[11px] text-sky-400 hover:text-sky-300 font-semibold hover:underline flex items-center gap-1"
+                          className="text-xs text-sky-400 hover:text-sky-300 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
                         >
-                          <span>Manage / Edit</span>
-                          <ChevronRight className="w-3 h-3" />
+                          <span>Open Full Editor</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
                         </button>
                       </div>
+                    </div>
 
-                      <div className="overflow-x-auto max-h-72 overflow-y-auto">
-                        <table className="w-full text-xs text-left">
-                          <thead className="bg-slate-950 text-slate-400 font-bold border-b border-slate-800 sticky top-0">
+                    <div className="overflow-x-auto max-h-72 overflow-y-auto">
+                      <table className="w-full text-xs text-left">
+                        <thead className="bg-slate-950 text-slate-300 font-bold border-b border-slate-800 sticky top-0">
+                          <tr>
+                            <th className="py-2.5 px-3">Asset</th>
+                            <th className="py-2.5 px-3 text-right">Holdings Qty</th>
+                            <th className="py-2.5 px-3 text-right">Buy Price</th>
+                            <th className="py-2.5 px-3 text-right">Current Price</th>
+                            <th className="py-2.5 px-3 text-right">Total Valuation</th>
+                            <th className="py-2.5 px-3 text-right">Unrealized P&amp;L</th>
+                            <th className="py-2.5 px-3 text-right">Return %</th>
+                            <th className="py-2.5 px-3 text-center">Status</th>
+                            <th className="py-2.5 px-2 text-center">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800">
+                          {calculatedRows.length === 0 ? (
                             <tr>
-                              <th className="py-2.5 px-3">Coin</th>
-                              <th className="py-2.5 px-3 text-right">Holdings</th>
-                              <th className="py-2.5 px-3 text-right">Value</th>
-                              <th className="py-2.5 px-3 text-right">P&amp;L</th>
-                              <th className="py-2.5 px-2 text-center">Action</th>
+                              <td colSpan={9} className="py-8 text-center text-slate-400">
+                                No coins in portfolio. Click "Add Crypto Coin" above to test.
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-800">
-                            {calculatedRows.length === 0 ? (
-                              <tr>
-                                <td colSpan={5} className="py-8 text-center text-slate-400">
-                                  No coins in portfolio. Click "Add Crypto Coin" above to test.
+                          ) : (
+                            calculatedRows.map((row, idx) => (
+                              <tr key={row.coinId} className="hover:bg-slate-800/50">
+                                <td className="py-2.5 px-3 font-medium text-slate-200 capitalize flex items-center gap-2">
+                                  <span 
+                                    className="w-2.5 h-2.5 rounded-full shrink-0" 
+                                    style={{ backgroundColor: getCoinColor(row.coinId, idx) }} 
+                                  />
+                                  <div>
+                                    <div className="font-semibold text-white">{row.coinId}</div>
+                                    <div className="text-[10px] text-slate-400 font-mono">{row.symbol}</div>
+                                  </div>
+                                </td>
+                                <td className="py-2.5 px-3 text-right font-mono text-slate-200">
+                                  {row.quantity}
+                                </td>
+                                <td className="py-2.5 px-3 text-right font-mono text-slate-400">
+                                  ${row.buyPrice.toLocaleString()}
+                                </td>
+                                <td className="py-2.5 px-3 text-right font-mono text-white font-semibold">
+                                  ${row.currentPrice.toLocaleString()}
+                                </td>
+                                <td className="py-2.5 px-3 text-right font-mono text-slate-200 font-bold">
+                                  ${row.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </td>
+                                <td className={`py-2.5 px-3 text-right font-mono font-semibold ${row.profitLoss >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                  {row.profitLoss >= 0 ? '+$' : '-$'}{Math.abs(row.profitLoss).toFixed(2)}
+                                </td>
+                                <td className={`py-2.5 px-3 text-right font-mono font-bold ${row.returnPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                  {row.returnPct >= 0 ? '+' : ''}{row.returnPct.toFixed(1)}%
+                                </td>
+                                <td className="py-2.5 px-3 text-center">
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono">
+                                    {row.errorStatus}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-2 text-center">
+                                  <button
+                                    onClick={() => handleRemoveCoin(row.coinId)}
+                                    className="p-1 text-slate-500 hover:text-rose-400 transition rounded hover:bg-slate-800 cursor-pointer"
+                                    title="Remove from demo"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
                                 </td>
                               </tr>
-                            ) : (
-                              calculatedRows.map((row, idx) => (
-                                <tr key={row.coinId} className="hover:bg-slate-800/50">
-                                  <td className="py-2.5 px-3 font-medium text-slate-200 capitalize flex items-center gap-2">
-                                    <span 
-                                      className="w-2.5 h-2.5 rounded-full shrink-0" 
-                                      style={{ backgroundColor: getCoinColor(row.coinId, idx) }} 
-                                    />
-                                    <div>
-                                      <div className="font-semibold text-white">{row.coinId}</div>
-                                      <div className="text-[10px] text-slate-400 font-mono">{row.symbol}</div>
-                                    </div>
-                                  </td>
-                                  <td className="py-2.5 px-3 text-right font-mono text-slate-300">
-                                    <div>{row.quantity}</div>
-                                    <div className="text-[10px] text-slate-500">${row.currentPrice}</div>
-                                  </td>
-                                  <td className="py-2.5 px-3 text-right font-mono text-slate-200 font-semibold">
-                                    ${row.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                  </td>
-                                  <td className={`py-2.5 px-3 text-right font-mono font-semibold ${row.profitLoss >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                    <div>
-                                      {row.profitLoss >= 0 ? '+$' : '-$'}{Math.abs(row.profitLoss).toFixed(2)}
-                                    </div>
-                                    <div className="text-[10px]">
-                                      {row.returnPct >= 0 ? '+' : ''}{row.returnPct.toFixed(1)}%
-                                    </div>
-                                  </td>
-                                  <td className="py-2.5 px-2 text-center">
-                                    <button
-                                      onClick={() => handleRemoveCoin(row.coinId)}
-                                      className="p-1 text-slate-500 hover:text-rose-400 transition rounded hover:bg-slate-800 cursor-pointer"
-                                      title="Remove from demo"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {/* Profit/Loss by Coin Bar Chart */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-xs font-bold text-slate-300">
-                          Profit / Loss by Coin ($)
-                        </h4>
-                        <span className="text-[11px] text-slate-500 font-mono">Dynamic Bar Chart</span>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        {calculatedRows.length === 0 ? (
-                          <div className="py-6 text-center text-xs text-slate-500">
-                            Add coins to visualize P&amp;L breakdown
-                          </div>
-                        ) : (
-                          calculatedRows.map((row) => {
-                            const maxAbsPL = Math.max(...calculatedRows.map(r => Math.abs(r.profitLoss)), 10);
-                            const isPositive = row.profitLoss >= 0;
-                            const widthPct = Math.min(100, (Math.abs(row.profitLoss) / maxAbsPL) * 100);
-
-                            return (
-                              <div key={row.coinId} className="space-y-1 text-xs">
-                                <div className="flex justify-between text-slate-400">
-                                  <span className="capitalize font-medium text-slate-200">{row.coinId} ({row.symbol})</span>
-                                  <span className={isPositive ? 'text-emerald-400 font-mono font-bold' : 'text-rose-400 font-mono font-bold'}>
-                                    {isPositive ? '+$' : '-$'}{Math.abs(row.profitLoss).toFixed(2)} ({row.returnPct.toFixed(1)}%)
-                                  </span>
-                                </div>
-                                <div className="w-full bg-slate-950 h-3 rounded-full overflow-hidden flex items-center p-0.5 border border-slate-800/80">
-                                  <div
-                                    className={`h-full rounded-full transition-all duration-500 ${isPositive ? 'bg-emerald-500' : 'bg-rose-500'}`}
-                                    style={{ width: `${Math.max(4, widthPct)}%` }}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-
-                  {/* Right Column: Coin Allocation Breakdown */}
-                  <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                          <PieChart className="w-3.5 h-3.5 text-cyan-400" />
-                          <span>Coin Allocation (Portfolio Weight %)</span>
-                        </h4>
-                        <span className="text-[11px] text-cyan-400 font-mono font-semibold">100% Normalized</span>
-                      </div>
-
-                      {/* Visual Allocation Stack */}
-                      <div className="flex h-6 rounded-lg overflow-hidden my-4 border border-slate-800 bg-slate-950">
-                        {totalPortfolioValue === 0 ? (
-                          <div className="w-full h-full bg-slate-800 flex items-center justify-center text-[10px] text-slate-500">
-                            Portfolio Empty
-                          </div>
-                        ) : (
-                          calculatedRows.map((row, idx) => {
-                            const pct = totalPortfolioValue > 0 ? (row.currentValue / totalPortfolioValue) * 100 : 0;
-                            if (pct <= 0) return null;
-
-                            return (
-                              <div
-                                key={row.coinId}
-                                className="h-full transition-all hover:opacity-90 cursor-help"
-                                style={{
-                                  width: `${pct}%`,
-                                  backgroundColor: getCoinColor(row.coinId, idx)
-                                }}
-                                title={`${row.coinId} (${row.symbol}): $${row.currentValue.toFixed(2)} (${pct.toFixed(1)}%)`}
-                              />
-                            );
-                          })
-                        )}
-                      </div>
-
-                      {/* Allocation Legend with Percentages */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 max-h-64 overflow-y-auto">
-                        {calculatedRows.map((row, idx) => {
-                          const pct = totalPortfolioValue > 0 ? (row.currentValue / totalPortfolioValue) * 100 : 0;
-                          const colorDot = getCoinColor(row.coinId, idx);
-
-                          return (
-                            <div key={row.coinId} className="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800 text-xs">
-                              <div className="flex items-center gap-2 truncate">
-                                <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: colorDot }} />
-                                <span className="text-slate-200 capitalize font-medium truncate">{row.coinId}</span>
-                                <span className="text-[10px] text-slate-500 font-mono">{row.symbol}</span>
-                              </div>
-                              <span className="font-mono text-cyan-400 font-bold ml-2">{pct.toFixed(1)}%</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="p-3 mt-4 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-mono text-slate-400">Formula: =F2/SUM(F2:F{holdings.length + 1})</span>
-                      <span className="text-emerald-400 font-medium flex items-center gap-1">
-                        <Check className="w-3 h-3" />
-                        <span>Dynamic Real-Time Rebalancing</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -890,7 +1226,7 @@ function updateLivePricesAndPortfolio() {
                       onClick={handleResetToDefault}
                       className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
                     >
-                      <RotateCcw className="w-3 h-3" />
+                      <RotateCcw className="w-3.5 h-3.5" />
                       <span>Reset</span>
                     </button>
                   </div>
@@ -968,68 +1304,64 @@ function updateLivePricesAndPortfolio() {
                                 )}
                               </td>
 
-                              {/* Calculated Current Value */}
                               <td className="py-2.5 px-3 text-right font-mono text-slate-200 font-bold">
-                                ${row.currentValue.toFixed(2)}
+                                ${row.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
 
-                              {/* Profit/Loss */}
-                              <td className={`py-2.5 px-3 text-right font-mono font-bold ${row.profitLoss >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              <td className={`py-2.5 px-3 text-right font-mono font-semibold ${row.profitLoss >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                 {row.profitLoss >= 0 ? '+$' : '-$'}{Math.abs(row.profitLoss).toFixed(2)}
                               </td>
 
-                              {/* Return % */}
                               <td className={`py-2.5 px-3 text-right font-mono font-bold ${row.returnPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                {row.returnPct >= 0 ? '+' : ''}{row.returnPct.toFixed(2)}%
+                                {row.returnPct >= 0 ? '+' : ''}{row.returnPct.toFixed(1)}%
                               </td>
 
-                              <td className="py-2.5 px-3 text-slate-400 text-[11px]">{row.lastUpdated}</td>
+                              <td className="py-2.5 px-3 text-slate-400 font-mono text-[11px]">
+                                {row.lastUpdated}
+                              </td>
 
                               <td className="py-2.5 px-3 text-center">
-                                <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[10px] font-bold">
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono">
                                   {row.errorStatus}
                                 </span>
                               </td>
 
-                              {/* Actions */}
                               <td className="py-2.5 px-3 text-center">
-                                <div className="flex items-center justify-center gap-1.5">
-                                  {isEditing ? (
-                                    <>
-                                      <button
-                                        onClick={() => saveEditing(row.coinId)}
-                                        className="p-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded transition cursor-pointer"
-                                        title="Save edits"
-                                      >
-                                        <Check className="w-3.5 h-3.5" />
-                                      </button>
-                                      <button
-                                        onClick={() => setEditingCoinId(null)}
-                                        className="p-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition cursor-pointer"
-                                        title="Cancel"
-                                      >
-                                        <X className="w-3.5 h-3.5" />
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <button
-                                        onClick={() => startEditing(row)}
-                                        className="p-1 text-slate-400 hover:text-sky-300 rounded hover:bg-slate-800 transition cursor-pointer"
-                                        title="Edit coin quantity or prices"
-                                      >
-                                        <Edit3 className="w-3.5 h-3.5" />
-                                      </button>
-                                      <button
-                                        onClick={() => handleRemoveCoin(row.coinId)}
-                                        className="p-1 text-slate-400 hover:text-rose-400 rounded hover:bg-slate-800 transition cursor-pointer"
-                                        title="Remove coin"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
+                                {isEditing ? (
+                                  <div className="flex items-center justify-center gap-1">
+                                    <button
+                                      onClick={() => saveEditing(row.coinId)}
+                                      className="p-1 text-emerald-400 hover:text-emerald-300 rounded bg-emerald-950 border border-emerald-700 cursor-pointer"
+                                      title="Save changes"
+                                    >
+                                      <Check className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingCoinId(null)}
+                                      className="p-1 text-slate-400 hover:text-white rounded bg-slate-800 cursor-pointer"
+                                      title="Cancel"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <button
+                                      onClick={() => startEditing(row)}
+                                      className="p-1 text-slate-400 hover:text-sky-300 rounded hover:bg-slate-800 cursor-pointer"
+                                      title="Edit holding"
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleRemoveCoin(row.coinId)}
+                                      className="p-1 text-slate-500 hover:text-rose-400 rounded hover:bg-slate-800 cursor-pointer"
+                                      title="Delete holding"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                )}
                               </td>
                             </tr>
                           );
@@ -1043,13 +1375,26 @@ function updateLivePricesAndPortfolio() {
 
             {/* TAB 3: LIVE PRICES */}
             {activeSheetTab === 'Live Prices' && (
-              <div className="space-y-4 max-w-4xl mx-auto">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-white text-sm flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-emerald-400" />
-                    <span>Live Prices Tab (Direct REST API Output)</span>
-                  </h3>
-                  <span className="text-xs text-slate-400">Sheet: Live Prices ({holdings.length} tracked assets)</span>
+              <div className="space-y-4 max-w-6xl mx-auto">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      <span>Live Prices Tab (Direct CoinGecko API Feed)</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Endpoint: `https://api.coingecko.com/api/v3/simple/price?ids=...&amp;vs_currencies=usd&amp;include_24hr_change=true`
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleSimulateAppsScriptRun}
+                    disabled={isRefreshing}
+                    className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-cyan-300 rounded-lg border border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 text-cyan-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    <span>{isRefreshing ? 'Fetching...' : 'Re-Fetch API Now'}</span>
+                  </button>
                 </div>
 
                 <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
@@ -1057,33 +1402,35 @@ function updateLivePricesAndPortfolio() {
                     <table className="w-full text-xs text-left">
                       <thead className="bg-slate-950 text-slate-300 font-bold border-b border-slate-800">
                         <tr>
-                          <th className="py-2.5 px-4">Coin ID</th>
-                          <th className="py-2.5 px-4">Symbol</th>
-                          <th className="py-2.5 px-4 text-right">Current Price USD</th>
-                          <th className="py-2.5 px-4 text-right">24h Change %</th>
-                          <th className="py-2.5 px-4 text-center">Status</th>
-                          <th className="py-2.5 px-4">Last Updated</th>
+                          <th className="py-2.5 px-3">Coin ID</th>
+                          <th className="py-2.5 px-3 text-right">Price (USD)</th>
+                          <th className="py-2.5 px-3 text-right">24h Change (%)</th>
+                          <th className="py-2.5 px-3 text-center">Status</th>
+                          <th className="py-2.5 px-3">Last Sync Timestamp</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800">
-                        {calculatedRows.map((row) => (
-                          <tr key={row.coinId} className="hover:bg-slate-800/40">
-                            <td className="py-2.5 px-4 font-medium text-white capitalize">{row.coinId}</td>
-                            <td className="py-2.5 px-4 font-mono text-slate-300">{row.symbol}</td>
-                            <td className="py-2.5 px-4 text-right font-mono text-white font-semibold">${row.currentPrice}</td>
-                            <td className={`py-2.5 px-4 text-right font-mono font-bold ${row.change24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                              {row.change24h >= 0 ? '+' : ''}{row.change24h.toFixed(2)}%
+                        {calculatedRows.map((coin) => (
+                          <tr key={coin.coinId} className="hover:bg-slate-800/40">
+                            <td className="py-2.5 px-3 font-medium text-white capitalize">{coin.coinId}</td>
+                            <td className="py-2.5 px-3 text-right font-mono text-cyan-300 font-bold">
+                              ${coin.currentPrice.toLocaleString()}
                             </td>
-                            <td className="py-2.5 px-4 text-center">
-                              <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
-                                row.change24h >= 0 
-                                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
-                                  : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                            <td className={`py-2.5 px-3 text-right font-mono font-bold ${coin.change24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+                            </td>
+                            <td className="py-2.5 px-3 text-center">
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${
+                                coin.change24h >= 0 
+                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                                  : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                               }`}>
-                                {row.change24h >= 0 ? 'Gainer' : 'Dip'}
+                                {coin.change24h >= 0 ? 'Gainer' : 'Loser'}
                               </span>
                             </td>
-                            <td className="py-2.5 px-4 text-slate-400 text-[11px] font-mono">{row.lastUpdated}</td>
+                            <td className="py-2.5 px-3 text-slate-400 font-mono text-[11px]">
+                              {lastRefreshedTime}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -1095,106 +1442,118 @@ function updateLivePricesAndPortfolio() {
 
             {/* TAB 4: HISTORY */}
             {activeSheetTab === 'History' && (
-              <div className="space-y-4 max-w-4xl mx-auto">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-white text-sm flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-amber-400" />
-                    <span>History Tab (Time-Series Append Logs)</span>
-                  </h3>
-                  <span className="text-xs text-slate-400">Sheet: History ({historyRows.length} logged records)</span>
+              <div className="space-y-4 max-w-6xl mx-auto">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-sky-400" />
+                      <span>History Tab (Time-series Audit Trail &amp; Triggers)</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Rows automatically appended via `historySheet.appendRow([now, coinId, price, change])`.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden max-h-96 overflow-y-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead className="bg-slate-950 text-slate-300 font-bold border-b border-slate-800 sticky top-0">
-                      <tr>
-                        <th className="py-2.5 px-4">Date/Time</th>
-                        <th className="py-2.5 px-4">Coin ID</th>
-                        <th className="py-2.5 px-4 text-right">Price</th>
-                        <th className="py-2.5 px-4 text-right">24h Change %</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800 font-mono">
-                      {historyRows.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-slate-800/40">
-                          <td className="py-2 px-4 text-slate-400">{row.timestamp}</td>
-                          <td className="py-2 px-4 font-medium text-slate-200 capitalize">{row.coinId}</td>
-                          <td className="py-2 px-4 text-right text-white">${row.price}</td>
-                          <td className={`py-2 px-4 text-right ${row.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                            {row.change >= 0 ? '+' : ''}{row.change.toFixed(2)}% {row.status && `(${row.status})`}
-                          </td>
+                <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead className="bg-slate-950 text-slate-300 font-bold border-b border-slate-800 sticky top-0">
+                        <tr>
+                          <th className="py-2.5 px-3">Logged Timestamp</th>
+                          <th className="py-2.5 px-3">Coin ID</th>
+                          <th className="py-2.5 px-3 text-right">Logged Price ($)</th>
+                          <th className="py-2.5 px-3 text-right">24h Change (%)</th>
+                          <th className="py-2.5 px-3 text-center">Trigger Tag</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800 font-mono">
+                        {historyRows.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-slate-800/40">
+                            <td className="py-2 px-3 text-slate-400 text-[11px]">{row.timestamp}</td>
+                            <td className="py-2 px-3 text-white capitalize">{row.coinId}</td>
+                            <td className="py-2 px-3 text-right text-slate-200">${row.price}</td>
+                            <td className={`py-2 px-3 text-right ${row.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {row.change >= 0 ? '+' : ''}{Number(row.change).toFixed(2)}%
+                            </td>
+                            <td className="py-2 px-3 text-center">
+                              <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                                {row.status || 'Hourly Sync'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* MODAL / DIALOG: Add & Manipulate Crypto Coin */}
+        {/* Add / Buy Coin Modal */}
         {isAddCoinOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs">
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-lg w-full shadow-2xl text-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold">
-                    <Plus className="w-5 h-5" />
+                  <div className="w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-500/40 flex items-center justify-center text-sky-400">
+                    <Plus className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base">Add Crypto to Demo Portfolio</h3>
-                    <p className="text-xs text-slate-400">Specify coin details, amount, and buy price</p>
+                    <h3 className="font-bold text-white text-base">Add / Buy Crypto Coin</h3>
+                    <p className="text-xs text-slate-400">Add a coin position to update all dynamic dashboard charts.</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsAddCoinOpen(false)}
-                  className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                  className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
               {formError && (
-                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                   <span>{formError}</span>
                 </div>
               )}
 
               <form onSubmit={handleAddCoinSubmit} className="space-y-4 text-xs">
-                {/* Preset or Custom Selector */}
+                {/* Preset Selector */}
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1.5">
                     Select Coin Preset or Custom
                   </label>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
-                    {PRESET_COINS.map((p) => (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {PRESET_COINS.map(p => (
                       <button
-                        key={p.coinId}
                         type="button"
+                        key={p.coinId}
                         onClick={() => handleSelectPreset(p.coinId)}
-                        className={`p-2 rounded-lg border text-left transition cursor-pointer ${
+                        className={`p-2 rounded-xl border text-left transition cursor-pointer ${
                           newCoinType === p.coinId
-                            ? 'bg-blue-600/30 border-blue-500 text-white font-bold ring-1 ring-blue-500'
-                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                            ? 'bg-blue-600/20 border-blue-500 text-white font-bold'
+                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                         }`}
                       >
-                        <div className="font-semibold truncate">{p.symbol}</div>
-                        <div className="text-[10px] text-slate-400 truncate capitalize">{p.name}</div>
+                        <div className="font-semibold text-xs text-white">{p.symbol}</div>
+                        <div className="text-[10px] text-slate-400 truncate capitalize">{p.coinId}</div>
                       </button>
                     ))}
                     <button
                       type="button"
                       onClick={() => handleSelectPreset('custom')}
-                      className={`p-2 rounded-lg border text-left transition cursor-pointer ${
+                      className={`p-2 rounded-xl border text-left transition cursor-pointer ${
                         newCoinType === 'custom'
-                          ? 'bg-blue-600/30 border-blue-500 text-white font-bold ring-1 ring-blue-500'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                          ? 'bg-blue-600/20 border-blue-500 text-white font-bold'
+                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                       }`}
                     >
-                      <div className="font-semibold text-sky-400">+ Custom</div>
-                      <div className="text-[10px] text-slate-400">Any Coin</div>
+                      <div className="font-semibold text-xs text-sky-400">+ Custom</div>
+                      <div className="text-[10px] text-slate-400">Enter Any</div>
                     </button>
                   </div>
                 </div>
