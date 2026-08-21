@@ -1,8 +1,43 @@
+# Dependencies
 node_modules/
+
+# Production build outputs
 build/
 dist/
+dist-ssr/
 coverage/
+
+# OS and temp files
 .DS_Store
+*.pem
+*.key
+*.cert
+*.crt
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment and Secret files
 .env*
 !.env.example
+*.local
+
+# Firebase and Google Cloud configs containing credentials
+firebase-applet-config.json
+firebase-blueprint.json
+firebase.json
+firestore.rules
+firestore.indexes.json
+service-account*.json
+credentials*.json
+client_secret*.json
+google-services.json
+GoogleService-Info.plist
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
