@@ -1,9 +1,21 @@
 @import "tailwindcss";
 
 @layer base {
+  html.light, html.light body {
+    background-color: #f8fafc;
+    color: #0f172a;
+  }
+
+  html.dark, html.dark body {
+    background-color: #0b0f19;
+    color: #f8fafc;
+  }
+
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
+    min-height: 100vh;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
   
   code, pre, .font-mono {
@@ -16,19 +28,26 @@
 }
 
 /* Custom subtle scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
+html.dark ::-webkit-scrollbar-track {
   background: #090d16;
 }
-::-webkit-scrollbar-thumb {
+html.dark ::-webkit-scrollbar-thumb {
   background: #1e293b;
   border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover {
+html.dark ::-webkit-scrollbar-thumb:hover {
   background: #334155;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 /* Glass & Glow utilities */
@@ -81,4 +100,144 @@
 
 .animate-float-slow-reverse {
   animation: float-slow-reverse 7s ease-in-out infinite;
+}
+
+/* =========================================================
+   CLEAN ATS-COMPLIANT PRINT STYLES (Strict 1-2 Page Format)
+   ========================================================= */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 14mm 12mm 14mm;
+  }
+
+  /* Reset document root */
+  html, body {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide entire application shell and background sections */
+  nav,
+  main,
+  footer,
+  canvas,
+  #scroll-progress-bar,
+  #custom-cursor,
+  .bg-slate-950,
+  [class*="glow-mesh"],
+  [class*="DataBusinessBackground"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Hide everything inside #root except the resume modal overlay */
+  #root > div > *:not(#resume-modal-overlay) {
+    display: none !important;
+  }
+
+  /* Modal Wrapper becomes a transparent, flow container */
+  #resume-modal-overlay {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  #resume-modal-dialog {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Printable Resume Sheet */
+  #printable-resume-canvas {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 10pt !important;
+    line-height: 1.4 !important;
+    overflow: visible !important;
+  }
+
+  #printable-resume-canvas h1 {
+    font-size: 20pt !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    margin: 0 0 4px 0 !important;
+  }
+
+  #printable-resume-canvas h2 {
+    font-size: 10.5pt !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    color: #0f172a !important;
+    border-bottom: 1.5px solid #0f172a !important;
+    margin-top: 10px !important;
+    margin-bottom: 4px !important;
+    padding-bottom: 2px !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  #printable-resume-canvas p,
+  #printable-resume-canvas li,
+  #printable-resume-canvas span,
+  #printable-resume-canvas div {
+    color: #1f2937 !important;
+  }
+
+  #printable-resume-canvas strong {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+  }
+
+  #printable-resume-canvas a {
+    color: #0f172a !important;
+    text-decoration: none !important;
+  }
+
+  #printable-resume-canvas ul {
+    margin-top: 3px !important;
+    margin-bottom: 3px !important;
+    padding-left: 16px !important;
+  }
+
+  #printable-resume-canvas li {
+    font-size: 9.5pt !important;
+    line-height: 1.35 !important;
+    margin-bottom: 2.5px !important;
+  }
 }

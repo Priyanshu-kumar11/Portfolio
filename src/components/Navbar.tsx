@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, FileText, Sparkles, ChevronDown, BarChart2, Briefcase, Layers } from 'lucide-react';
+import { Menu, X, FileText, Sun, Moon, BarChart2, Briefcase, Layers } from 'lucide-react';
 import { profileData } from '../data/portfolioData';
+import { useTheme } from '../context/ThemeContext';
 
 interface Props {
   onOpenResume: () => void;
@@ -15,6 +16,7 @@ export const Navbar: React.FC<Props> = ({
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,115 +36,183 @@ export const Navbar: React.FC<Props> = ({
     { label: 'Contact', href: '#contact' },
   ];
 
+  const isDark = theme === 'dark';
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
         isScrolled
-          ? 'bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 shadow-lg shadow-slate-950/50 py-3'
-          : 'bg-transparent py-4 sm:py-5'
+          ? isDark
+            ? 'bg-[#0b0f19]/95 backdrop-blur-md border-b border-slate-800 shadow-md py-3'
+            : 'bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm py-3'
+          : isDark
+            ? 'bg-[#0b0f19]/80 backdrop-blur-sm border-b border-slate-800/40 py-3.5 sm:py-4.5'
+            : 'bg-white/85 backdrop-blur-sm border-b border-slate-200/60 py-3.5 sm:py-4.5'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Brand / Name Logo */}
+        {/* Brand / Logo */}
         <a href="#overview" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 p-[1px] shadow-lg shadow-cyan-500/10 group-hover:shadow-cyan-500/30 transition">
-            <div className="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center font-display font-extrabold text-cyan-400 text-lg">
-              PK
-            </div>
+          <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm transition ${
+            isDark 
+              ? 'bg-slate-900 border border-slate-700 text-sky-400 group-hover:border-sky-500' 
+              : 'bg-slate-900 border border-slate-800 text-white shadow-sm'
+          }`}>
+            PK
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-display font-bold text-base sm:text-lg text-white group-hover:text-cyan-400 transition">
+              <span className={`font-semibold text-base sm:text-lg transition ${
+                isDark ? 'text-white group-hover:text-sky-400' : 'text-slate-900 group-hover:text-blue-700'
+              }`}>
                 {profileData.name}
               </span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Available for hire" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500" title="Available for hire" />
             </div>
-            <div className="text-[11px] text-slate-400 font-medium hidden sm:block">
+            <div className={`text-[11px] font-medium hidden sm:block ${
+              isDark ? 'text-slate-400' : 'text-slate-600'
+            }`}>
               Data &amp; Business Analyst
             </div>
           </div>
         </a>
 
-        {/* Desktop Role Switcher Filter Pill */}
-        <div className="hidden lg:flex items-center bg-slate-900/90 border border-slate-800 rounded-full p-1 text-xs">
+        {/* Role Switcher Pill */}
+        <div className={`hidden lg:flex items-center rounded-lg p-1 text-xs transition ${
+          isDark ? 'bg-slate-900/90 border border-slate-800' : 'bg-slate-100 border border-slate-200'
+        }`}>
           <button
             onClick={() => setRoleFilter('all')}
-            className={`px-3 py-1 rounded-full transition font-medium flex items-center gap-1.5 ${
+            className={`px-3 py-1 rounded-md transition font-medium flex items-center gap-1.5 ${
               roleFilter === 'all'
-                ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? isDark
+                  ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                  : 'bg-white text-slate-900 font-semibold shadow-sm border border-slate-200'
+                : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            Dual Profile (DA + BA)
+            Dual Profile
           </button>
           <button
             onClick={() => setRoleFilter('data-analyst')}
-            className={`px-3 py-1 rounded-full transition font-medium flex items-center gap-1.5 ${
+            className={`px-3 py-1 rounded-md transition font-medium flex items-center gap-1.5 ${
               roleFilter === 'data-analyst'
-                ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? isDark
+                  ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                  : 'bg-white text-slate-900 font-semibold shadow-sm border border-slate-200'
+                : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <BarChart2 className="w-3.5 h-3.5" />
-            Data Analyst Focus
+            Data Analyst
           </button>
           <button
             onClick={() => setRoleFilter('business-analyst')}
-            className={`px-3 py-1 rounded-full transition font-medium flex items-center gap-1.5 ${
+            className={`px-3 py-1 rounded-md transition font-medium flex items-center gap-1.5 ${
               roleFilter === 'business-analyst'
-                ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? isDark
+                  ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                  : 'bg-white text-slate-900 font-semibold shadow-sm border border-slate-200'
+                : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Briefcase className="w-3.5 h-3.5" />
-            Business Analyst Focus
+            Business Analyst
           </button>
         </div>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-5 text-xs font-medium text-slate-300">
+        <nav className={`hidden md:flex items-center gap-5 text-xs font-medium ${
+          isDark ? 'text-slate-300' : 'text-slate-700'
+        }`}>
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="hover:text-cyan-400 transition"
+              className={`transition ${isDark ? 'hover:text-sky-400' : 'hover:text-blue-600'}`}
             >
               {link.label}
             </a>
           ))}
         </nav>
 
-        {/* Quick Action Buttons */}
-        <div className="hidden sm:flex items-center gap-2.5">
+        {/* Quick Actions & Day/Night Toggle */}
+        <div className="hidden sm:flex items-center gap-2">
+          {/* Day / Night Theme Toggle */}
+          <button
+            id="theme-toggle-btn"
+            onClick={toggleTheme}
+            className={`px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 ${
+              isDark
+                ? 'bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 hover:border-amber-300/40'
+                : 'bg-white hover:bg-slate-100 text-slate-900 border border-slate-300 hover:border-slate-400'
+            }`}
+            title={isDark ? 'Switch to Day (Light) Mode' : 'Switch to Night (Dark) Mode'}
+            aria-label="Toggle day and night mode"
+          >
+            {isDark ? (
+              <>
+                <Sun className="w-4 h-4 text-amber-300" />
+                <span className="text-xs font-semibold text-amber-200">Day</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-4 h-4 text-blue-700" />
+                <span className="text-xs font-semibold text-slate-800">Night</span>
+              </>
+            )}
+          </button>
+
           <a
             href="#contact"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-medium transition"
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              isDark
+                ? 'bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700'
+                : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 shadow-xs'
+            }`}
           >
-            <span>Get in Touch</span>
+            Contact
           </a>
 
           <button
             id="nav-resume-btn"
             onClick={onOpenResume}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs shadow-md shadow-cyan-500/20 active:scale-95 transition"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-sm active:scale-95 transition cursor-pointer"
           >
             <FileText className="w-3.5 h-3.5" />
             <span>Resume</span>
           </button>
         </div>
 
-        {/* Mobile menu trigger */}
-        <div className="flex sm:hidden items-center gap-2">
+        {/* Mobile menu and Theme toggle trigger */}
+        <div className="flex sm:hidden items-center gap-1.5">
+          <button
+            id="mobile-theme-toggle-btn"
+            onClick={toggleTheme}
+            className={`p-2 rounded-lg transition-all active:scale-90 flex items-center justify-center cursor-pointer ${
+              isDark 
+                ? 'bg-slate-900 text-amber-300 border border-slate-700' 
+                : 'bg-white text-blue-700 border border-slate-300 shadow-xs'
+            }`}
+            aria-label="Toggle theme"
+            title={isDark ? 'Switch to Day Mode' : 'Switch to Night Mode'}
+          >
+            {isDark ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-blue-700" />}
+          </button>
+          
           <button
             onClick={onOpenResume}
-            className="px-2.5 py-1 rounded bg-cyan-500 text-slate-950 font-bold text-xs"
+            className="px-2.5 py-1.5 rounded-md bg-blue-600 text-white font-semibold text-xs active:scale-95"
           >
             Resume
           </button>
+          
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300"
+            className={`p-1.5 rounded-lg ${
+              isDark ? 'bg-slate-900 border border-slate-700 text-slate-200' : 'bg-white border border-slate-300 text-slate-800 shadow-xs'
+            }`}
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -152,31 +222,41 @@ export const Navbar: React.FC<Props> = ({
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="sm:hidden bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 px-4 pt-3 pb-6 space-y-4 shadow-2xl">
-          {/* Role selector in mobile */}
+        <div className={`sm:hidden px-4 pt-3 pb-5 space-y-3.5 border-b shadow-xl ${
+          isDark ? 'bg-[#0b0f19] border-slate-800' : 'bg-white border-slate-200'
+        }`}>
+          {/* Role selector */}
           <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-              Profile Focus Mode:
+            <span className={`text-[10px] uppercase font-bold tracking-wider ${
+              isDark ? 'text-slate-400' : 'text-slate-500'
+            }`}>
+              Profile Focus:
             </span>
-            <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-[11px]">
+            <div className={`grid grid-cols-3 gap-1 p-1 rounded-lg text-[11px] ${
+              isDark ? 'bg-slate-900 border border-slate-800' : 'bg-slate-100 border border-slate-200'
+            }`}>
               <button
                 onClick={() => {
                   setRoleFilter('all');
                   setMobileMenuOpen(false);
                 }}
-                className={`py-1.5 rounded-lg text-center font-medium ${
-                  roleFilter === 'all' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400'
+                className={`py-1.5 rounded text-center font-medium ${
+                  roleFilter === 'all' 
+                    ? isDark ? 'bg-blue-600 text-white font-semibold' : 'bg-white text-slate-900 font-semibold shadow-sm'
+                    : isDark ? 'text-slate-400' : 'text-slate-600'
                 }`}
               >
-                Dual View
+                Dual
               </button>
               <button
                 onClick={() => {
                   setRoleFilter('data-analyst');
                   setMobileMenuOpen(false);
                 }}
-                className={`py-1.5 rounded-lg text-center font-medium ${
-                  roleFilter === 'data-analyst' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400'
+                className={`py-1.5 rounded text-center font-medium ${
+                  roleFilter === 'data-analyst'
+                    ? isDark ? 'bg-blue-600 text-white font-semibold' : 'bg-white text-slate-900 font-semibold shadow-sm'
+                    : isDark ? 'text-slate-400' : 'text-slate-600'
                 }`}
               >
                 Data
@@ -186,8 +266,10 @@ export const Navbar: React.FC<Props> = ({
                   setRoleFilter('business-analyst');
                   setMobileMenuOpen(false);
                 }}
-                className={`py-1.5 rounded-lg text-center font-medium ${
-                  roleFilter === 'business-analyst' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400'
+                className={`py-1.5 rounded text-center font-medium ${
+                  roleFilter === 'business-analyst'
+                    ? isDark ? 'bg-blue-600 text-white font-semibold' : 'bg-white text-slate-900 font-semibold shadow-sm'
+                    : isDark ? 'text-slate-400' : 'text-slate-600'
                 }`}
               >
                 Business
@@ -195,13 +277,17 @@ export const Navbar: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-xs">
+          <div className={`grid grid-cols-2 gap-2 pt-2 border-t text-xs ${
+            isDark ? 'border-slate-800' : 'border-slate-200'
+          }`}>
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800/80 text-slate-300 hover:text-cyan-400"
+                className={`p-2 rounded-lg transition ${
+                  isDark ? 'bg-slate-900/60 border border-slate-800 text-slate-300 hover:text-sky-400' : 'bg-slate-50 border border-slate-200 text-slate-700 hover:text-blue-600'
+                }`}
               >
                 {link.label}
               </a>
@@ -214,10 +300,10 @@ export const Navbar: React.FC<Props> = ({
                 onOpenResume();
                 setMobileMenuOpen(false);
               }}
-              className="w-full py-2.5 bg-cyan-500 text-slate-950 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20"
+              className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm"
             >
               <FileText className="w-4 h-4" />
-              View Full Formatted Resume
+              View Formatted Resume
             </button>
           </div>
         </div>

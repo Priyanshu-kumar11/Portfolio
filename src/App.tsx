@@ -4,7 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { ScrollProgressBar, CustomCursor } from './components/ScrollProgressBar';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { ScrollProgressBar } from './components/ScrollProgressBar';
 import { DataBusinessBackground } from './components/DataBusinessBackground';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -18,20 +19,23 @@ import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 import { InteractiveResumeModal } from './components/InteractiveResumeModal';
 
-export default function App() {
+function AppContent() {
   const [isResumeOpen, setIsResumeOpen] = useState(false);
   const [roleFilter, setRoleFilter] = useState<'all' | 'data-analyst' | 'business-analyst'>('all');
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-slate-950 relative">
-      {/* Background data & business network animations */}
+    <div className={`min-h-screen flex flex-col relative transition-colors duration-300 ${
+      isDark 
+        ? 'bg-[#0b0f19] text-slate-100 selection:bg-blue-600 selection:text-white' 
+        : 'bg-slate-50 text-slate-900 selection:bg-blue-600 selection:text-white'
+    }`}>
+      {/* Background data network canvas */}
       <DataBusinessBackground />
 
       {/* Scroll indicator bar */}
       <ScrollProgressBar />
-
-      {/* Ambient cursor spotlight on desktop fine-pointer devices */}
-      <CustomCursor />
 
       {/* Main sticky navigation */}
       <Navbar
@@ -41,7 +45,7 @@ export default function App() {
       />
 
       {/* Main content sections */}
-      <main className="flex-1">
+      <main className="flex-1 relative z-10">
         <Hero
           onOpenResume={() => setIsResumeOpen(true)}
           roleFilter={roleFilter}
@@ -64,9 +68,11 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <Footer
-        onOpenResume={() => setIsResumeOpen(true)}
-      />
+      <div className="relative z-10">
+        <Footer
+          onOpenResume={() => setIsResumeOpen(true)}
+        />
+      </div>
 
       {/* Modal Dialog */}
       <InteractiveResumeModal
@@ -74,5 +80,13 @@ export default function App() {
         onClose={() => setIsResumeOpen(false)}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }

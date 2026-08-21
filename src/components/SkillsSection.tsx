@@ -5,13 +5,11 @@ import {
   Briefcase, 
   CheckCircle2, 
   Sparkles, 
-  Database, 
   Search, 
-  Cpu, 
-  Layers, 
   Sliders 
 } from 'lucide-react';
 import { skillCategories } from '../data/portfolioData';
+import { useTheme } from '../context/ThemeContext';
 
 interface Props {
   roleFilter: 'all' | 'data-analyst' | 'business-analyst';
@@ -19,7 +17,8 @@ interface Props {
 
 export const SkillsSection: React.FC<Props> = ({ roleFilter }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const filteredCategories = skillCategories.filter((cat) => {
     if (roleFilter === 'data-analyst') {
@@ -28,39 +27,50 @@ export const SkillsSection: React.FC<Props> = ({ roleFilter }) => {
     if (roleFilter === 'business-analyst') {
       if (cat.categoryName === 'Programming, SQL & Automation' && !searchTerm) return false;
     }
-    if (selectedCategory !== 'all' && cat.categoryName !== selectedCategory) {
-      return false;
-    }
     return true;
   });
 
   return (
-    <section id="skills" className="py-16 sm:py-24 bg-slate-950 relative">
+    <section id="skills" className={`py-16 sm:py-20 border-t transition-colors duration-300 ${
+      isDark ? 'bg-[#0b0f19] border-slate-800' : 'bg-white border-slate-200'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-cyan-400 font-semibold">
+            <div className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold border ${
+              isDark ? 'bg-slate-900 border-slate-800 text-sky-400' : 'bg-white border-blue-200 text-blue-800 shadow-sm'
+            }`}>
               <Sliders className="w-3.5 h-3.5" />
               <span>Technical &amp; Analytical Competencies</span>
             </div>
-            <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-white">
+            <h2 className={`text-2xl sm:text-4xl font-extrabold tracking-tight ${
+              isDark ? 'text-white' : 'text-slate-950'
+            }`}>
               Skills &amp; Technology Stack
             </h2>
-            <p className="text-sm sm:text-base text-slate-300">
+            <p className={`text-sm sm:text-base leading-relaxed ${
+              isDark ? 'text-slate-300' : 'text-slate-700'
+            }`}>
               Proficiencies across Business Analysis, Data Visualization, ETL Data Modeling, RPA validation, and Modern AI tools.
             </p>
           </div>
 
           {/* Search bar */}
           <div className="relative min-w-[240px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${
+              isDark ? 'text-slate-400' : 'text-slate-500'
+            }`} />
             <input
               type="text"
               placeholder="Search skills (e.g., DAX, SQL, UiPath)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition"
+              className={`w-full pl-9 pr-4 py-2.5 rounded-lg text-xs transition border focus:outline-none ${
+                isDark 
+                  ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:border-sky-400' 
+                  : 'bg-white border-slate-300 text-slate-950 placeholder-slate-400 focus:border-blue-600 shadow-xs'
+              }`}
             />
           </div>
         </div>
@@ -79,50 +89,62 @@ export const SkillsSection: React.FC<Props> = ({ roleFilter }) => {
             return (
               <div
                 key={category.categoryName}
-                className="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-6 shadow-xl flex flex-col justify-between glass-card-hover"
+                className={`rounded-xl p-5 sm:p-6 border shadow-sm flex flex-col justify-between transition ${
+                  isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-300 shadow-sm'
+                }`}
               >
                 <div>
                   {/* Category Header */}
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center font-bold">
-                      {idx === 0 && <BarChart3 className="w-5 h-5" />}
-                      {idx === 1 && <Briefcase className="w-5 h-5" />}
-                      {idx === 2 && <CheckCircle2 className="w-5 h-5" />}
-                      {idx === 3 && <Code2 className="w-5 h-5" />}
-                      {idx === 4 && <Sparkles className="w-5 h-5" />}
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold border ${
+                      isDark 
+                        ? 'bg-blue-950 text-sky-400 border-blue-800' 
+                        : 'bg-blue-50 text-blue-700 border-blue-200'
+                    }`}>
+                      {idx === 0 && <BarChart3 className="w-4 h-4" />}
+                      {idx === 1 && <Briefcase className="w-4 h-4" />}
+                      {idx === 2 && <CheckCircle2 className="w-4 h-4" />}
+                      {idx === 3 && <Code2 className="w-4 h-4" />}
+                      {idx === 4 && <Sparkles className="w-4 h-4" />}
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-white">
+                      <h3 className={`text-base font-bold ${isDark ? 'text-white' : 'text-slate-950'}`}>
                         {category.categoryName}
                       </h3>
-                      <span className="text-[11px] text-slate-400">
+                      <span className={`text-[11px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                         {category.skills.length} core competencies
                       </span>
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-400 mb-5 leading-relaxed">
+                  <p className={`text-xs mb-4 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                     {category.description}
                   </p>
 
-                  {/* Skills with animated meters */}
-                  <div className="space-y-3.5">
+                  {/* Skills with meters */}
+                  <div className="space-y-3">
                     {matchingSkills.map((skill) => (
-                      <div key={skill.name} className="space-y-1.5">
+                      <div key={skill.name} className="space-y-1">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-200 font-semibold flex items-center gap-1.5">
-                            {skill.highlight && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+                          <span className={`font-semibold flex items-center gap-1.5 ${
+                            isDark ? 'text-slate-200' : 'text-slate-900'
+                          }`}>
+                            {skill.highlight && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
                             {skill.name}
                           </span>
-                          <span className="text-slate-400 font-mono text-[11px]">
+                          <span className={`font-mono font-medium text-[11px] ${
+                            isDark ? 'text-slate-400' : 'text-slate-600'
+                          }`}>
                             {skill.level}%
                           </span>
                         </div>
 
                         {/* Progress Bar */}
-                        <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                        <div className={`w-full h-1.5 rounded-full overflow-hidden ${
+                          isDark ? 'bg-slate-950' : 'bg-slate-200'
+                        }`}>
                           <div
-                            className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-full transition-all duration-700"
+                            className="h-full bg-blue-600 rounded-full transition-all duration-500"
                             style={{ width: `${skill.level}%` }}
                           />
                         </div>
@@ -132,7 +154,11 @@ export const SkillsSection: React.FC<Props> = ({ roleFilter }) => {
                           {skill.tags.map((tag, tIdx) => (
                             <span
                               key={tIdx}
-                              className="text-[10px] px-1.5 py-0.5 rounded bg-slate-950/80 text-slate-400 border border-slate-800"
+                              className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${
+                                isDark 
+                                  ? 'bg-slate-950 text-slate-300 border-slate-800' 
+                                  : 'bg-white text-slate-800 border-slate-300'
+                              }`}
                             >
                               {tag}
                             </span>
